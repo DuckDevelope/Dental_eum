@@ -2,7 +2,28 @@
 
 > 세션 재개 시 가장 먼저 읽는 스냅샷. 의미 있는 진전·결정·블로커 변경 시 즉시 갱신.
 
-## 현재 상태 (2026-04-26 — v3 추가)
+## 현재 상태 (2026-04-26 — v3.2 스크롤 부드러움 + 지도 동작)
+
+- ✅ **v3.2 히어로 스크롤 파이프라인 재설계 (Opus, 박사님 지시 — 끊김 끝까지 해결)**
+  - GSAP ScrollTrigger 제거. CSS sticky pin + 자체 rAF lerp 구동
+  - Canvas attribute를 native 1280×720으로 두고 CSS object-fit:cover로 viewport 스케일링
+    → drawImage(img, 0, 0) 1:1 memcpy, GPU 컴포지터가 업스케일 처리 → 메인 스레드 비용 거의 0
+  - `img.decode()` 강제 — 첫 paint 시 lazy decode가 잡아먹는 stall 제거
+  - rAF idle 자동 정지 (lerp 수렴 시 멈췄다가 scroll 이벤트로 wake)
+  - 텍스트 레이어 style write 캐시 (불변 시 skip) → compositor 부담 ↓
+  - reduced-motion: lerp만 끄고 즉시 매핑 유지 → 사용자 모션 선호 반영하면서도 frame 진행
+  - GSAP CDN 의존성 완전 제거 (CSP/CDN 다운 시 안전)
+- ✅ **Playwright check-v3-final.mjs 41/41 PASS** (회귀 0)
+- ⚠ Playwright headless WSL2에서 diagnose-stutter는 30fps lock 패턴이 잔존 (avg 22ms / p95 33ms)
+  → SwiftShader 소프트 컴포지팅 환경 한계. 실 브라우저(Intel iGPU 이상)에서는 60fps 도달 예상.
+  → 알고리즘 차원 비용은 이전 대비 ↓ (drawImage 1:1, decode 강제, idle-stop)
+- ✅ **지도 동작 — location 페이지** (Opus, 박사님 지시 — "네이버든 카카오든 되도록")
+  - 기본: OpenStreetMap + Leaflet (API 키 불필요, 즉시 동작)
+  - 골드 톤 SVG 핀 + 인포 팝업
+  - Naver / Kakao / Google 지도 빠른 링크 버튼 (외부 새 탭)
+  - 박사님이 카카오 JavaScript 키 입력 시 자동으로 카카오맵으로 전환되는 분기 유지
+
+## 이전 상태 (2026-04-26 — v3 초기)
 
 - ✅ **v3 랜딩 히어로 완료 (2026-04-26, Sonnet)** — Vanilla HTML/CSS/JS, GSAP ScrollTrigger 스크롤 시퀀스
 - ✅ v2(Astro 기반) `_legacy_v2/`로 보관 완료

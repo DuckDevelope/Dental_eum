@@ -24,7 +24,9 @@
 }
 
 html {
-  /* NOTE: scroll-behavior: smooth removed — conflicts with GSAP ScrollTrigger pin/scrub */
+  /* NOTE: scroll-behavior: smooth는 의도적으로 미적용 —
+     히어로 sticky pin + rAF lerp 자체가 부드러운 보간을 처리하며,
+     anchor 클릭 등 외부 스무스 스크롤은 별도 JS에서 다룬다. */
   background: var(--bg-dark);
   color: var(--text-primary);
 }
@@ -87,17 +89,30 @@ body {
 }
 
 /* ============================================================
-   HERO SECTION
+   HERO SECTION — CSS sticky pin (no GSAP needed)
+   .hero 의 height은 JS가 설정 (100vh + SCROLL_TOTAL).
+   .hero__pin 이 sticky로 viewport 상단에 고정.
 ============================================================ */
 .hero {
   position: relative;
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  /* height은 JS에서 동적 설정. 스크립트 비활성/로딩 중 fallback으로 100vh */
+  min-height: 100vh;
   background: var(--bg-dark);
 }
 
-/* Canvas fills the hero */
+.hero__pin {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  /* 새 stacking context — fixed nav와 z-index 분리 안전 */
+  isolation: isolate;
+}
+
+/* Canvas: native 1280×720 attribute. CSS object-fit:cover로 viewport 스케일.
+   drawImage(img,0,0) 1:1 memcpy + GPU 컴포지터 업스케일 → 메인 스레드 부담 최소. */
 .hero__canvas {
   position: absolute;
   inset: 0;
@@ -106,6 +121,9 @@ body {
   display: block;
   object-fit: cover;
   z-index: 1;
+  /* GPU 레이어 강제: 컴포지터가 독립 처리하도록 */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Luxury vignette — strengthened (권고안 2) */

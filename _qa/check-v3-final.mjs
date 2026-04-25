@@ -185,24 +185,24 @@ async function test2_textOverlap(browser) {
     await waitForFrame(page);
     await page.waitForTimeout(500);
 
-    // ScrollTrigger scroll helper — set progress by scrolling
+    // Scroll helper — v3.2 CSS sticky 기반: window.__heroSetProgress 사용.
+    // ScrollTrigger fallback 유지 (예전 빌드 호환).
     async function setProgress(pct) {
       await page.evaluate((p) => {
-        // Use ScrollTrigger if available
-        if (window.ScrollTrigger) {
+        if (typeof window.__heroSetProgress === 'function') {
+          window.__heroSetProgress(p);
+        } else if (window.ScrollTrigger) {
           const triggers = ScrollTrigger.getAll();
           if (triggers.length > 0) {
             const st     = triggers[0];
-            const start  = st.start;
-            const end    = st.end;
-            const target = start + (end - start) * p;
+            const target = st.start + (st.end - st.start) * p;
             window.scrollTo(0, target);
           }
         } else {
           window.scrollTo(0, document.body.scrollHeight * p);
         }
       }, pct);
-      await page.waitForTimeout(1800); // scrub settle
+      await page.waitForTimeout(1800); // lerp settle
     }
 
     async function getOpacities() {

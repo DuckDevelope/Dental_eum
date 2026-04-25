@@ -9,6 +9,7 @@
   <title>오시는 길 | 이음 기공소</title>
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://unpkg.com" />
   <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,27 +17,97 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="../assets/css/page.css?v=5" />
+  <!-- Leaflet (OpenStreetMap) — API 키 불필요, 즉시 동작 -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin="" />
+
+  <link rel="stylesheet" href="../assets/css/page.css?v=7" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     .map-wrap {
       width: 100%;
-      height: 420px;
+      height: 460px;
       border-radius: 6px;
       overflow: hidden;
       background: #111;
       border: 1px solid rgba(184, 154, 94, 0.15);
-      margin-bottom: 2.5rem;
+      margin-bottom: 1.25rem;
       position: relative;
     }
 
-    #kakaoMap {
+    #leafletMap, #kakaoMap {
       width: 100%;
       height: 100%;
+      background: #1a1a1a;
     }
 
+    /* Leaflet attribution 톤 다운 */
+    .leaflet-control-attribution {
+      background: rgba(0, 0, 0, 0.55) !important;
+      color: rgba(232, 229, 222, 0.7) !important;
+      font-size: 10px !important;
+    }
+    .leaflet-control-attribution a {
+      color: var(--gold) !important;
+    }
+    .leaflet-popup-content-wrapper {
+      background: rgba(15, 15, 16, 0.96);
+      color: var(--text-primary);
+      border: 1px solid rgba(184, 154, 94, 0.3);
+      border-radius: 6px;
+    }
+    .leaflet-popup-tip {
+      background: rgba(15, 15, 16, 0.96);
+      border: 1px solid rgba(184, 154, 94, 0.3);
+    }
+    .leaflet-popup-close-button {
+      color: var(--gold) !important;
+    }
+
+    .map-quicklinks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .map-quicklink {
+      flex: 1 1 calc(33.33% - 0.6rem);
+      min-width: 140px;
+      padding: 0.78rem 1rem;
+      background: rgba(184, 154, 94, 0.08);
+      border: 1px solid rgba(184, 154, 94, 0.25);
+      border-radius: 4px;
+      color: var(--text-primary);
+      font-family: var(--font-kr);
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.25s var(--ease-prestige), border-color 0.25s, color 0.25s;
+    }
+    .map-quicklink:hover {
+      background: rgba(184, 154, 94, 0.18);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+    .map-quicklink__brand {
+      display: inline-block;
+      font-family: var(--font-en);
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-right: 0.5rem;
+    }
+
+    /* Kakao 키 입력 시 fallback placeholder (현재 OSM이 default라 미사용) */
     .map-placeholder {
       width: 100%;
       height: 100%;
@@ -48,11 +119,7 @@
       text-align: center;
       padding: 2rem;
     }
-
-    .map-placeholder__icon {
-      font-size: 2.5rem;
-    }
-
+    .map-placeholder__icon { font-size: 2.5rem; }
     .map-placeholder__title {
       font-family: var(--font-kr);
       font-size: 0.95rem;
@@ -60,7 +127,6 @@
       color: var(--gold);
       letter-spacing: 0.06em;
     }
-
     .map-placeholder__body {
       font-family: var(--font-kr);
       font-size: 0.82rem;
@@ -69,17 +135,9 @@
       color: var(--text-muted);
     }
 
-    .map-placeholder__body code {
-      font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
-      background: rgba(255,255,255,0.06);
-      padding: 1px 5px;
-      border-radius: 3px;
-      color: var(--gold-light);
-    }
-
     @media (max-width: 767px) {
-      .map-wrap { height: 280px; }
+      .map-wrap { height: 320px; }
+      .map-quicklink { flex: 1 1 100%; }
     }
   </style>
 </head>
@@ -101,12 +159,31 @@
       <p class="section-eyebrow">Map</p>
       <h2 class="section-title">위치 안내</h2>
 
-      <!-- 카카오맵 임베드 영역 -->
+      <!-- 지도 영역 — 기본은 Leaflet (OpenStreetMap, 키 없음).
+           카카오 앱키가 설정되면 카카오맵으로 전환됨. -->
       <div class="map-wrap" id="mapWrap">
-        <div id="kakaoMap">
-          <!-- placeholder — 카카오 앱 키 설정 후 지도 표시 -->
-        </div>
+        <div id="leafletMap" aria-label="이음 기공소 위치 지도"></div>
+        <div id="kakaoMap" style="display:none"></div>
       </div>
+
+      <!-- 외부 지도 서비스 빠른 링크 (네이버/카카오/구글) -->
+      <nav class="map-quicklinks" aria-label="외부 지도 서비스에서 열기">
+        <a class="map-quicklink"
+           href="https://map.naver.com/p/search/경기도%20용인시%20기흥구%20중부대로%20184%20힉스유타워"
+           target="_blank" rel="noopener noreferrer">
+          <span class="map-quicklink__brand">Naver</span>네이버 지도에서 보기
+        </a>
+        <a class="map-quicklink"
+           href="https://map.kakao.com/?q=경기도%20용인시%20기흥구%20중부대로%20184%20힉스유타워"
+           target="_blank" rel="noopener noreferrer">
+          <span class="map-quicklink__brand">Kakao</span>카카오맵에서 보기
+        </a>
+        <a class="map-quicklink"
+           href="https://www.google.com/maps/search/?api=1&query=경기도%20용인시%20기흥구%20중부대로%20184%20힉스유타워"
+           target="_blank" rel="noopener noreferrer">
+          <span class="map-quicklink__brand">Google</span>구글 지도에서 보기
+        </a>
+      </nav>
 
       <div class="location-grid">
         <div class="location-card">
@@ -139,74 +216,139 @@
     </section>
   </main>
 
-  <script src="../assets/js/nav.js?v=5"></script>
+  <script src="../assets/js/nav.js?v=7"></script>
 
-  <!--
-    ====================================================
-    카카오맵 설정 방법 (박사님이 채울 placeholder):
+  <!-- Leaflet (OSM) — 기본 지도 엔진. API 키 불필요. -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
 
-    1. https://developers.kakao.com/ 에서 앱 생성
-    2. [앱 설정 > 플랫폼 > Web]에서 사이트 도메인 등록
-    3. JavaScript 키를 복사
-    4. 아래 KAKAO_APP_KEY 값을 실제 키로 교체
-    5. LAT/LNG 좌표도 실제 값으로 교체 (현재: 추정값)
-    ====================================================
-  -->
   <script>
-    const KAKAO_APP_KEY = 'YOUR_KAKAO_JAVASCRIPT_APP_KEY'; // ← placeholder #6
-    const LAT = 37.2755;   // ← placeholder #7 (추정값)
-    const LNG = 127.1135;  // ← placeholder #7 (추정값)
+    /* ===========================================================
+       이음 기공소 — 위치 (Leaflet 기본 + 카카오 옵션)
+
+       - 기본: OpenStreetMap 타일 + Leaflet. API 키 불필요, 즉시 동작.
+       - 박사님이 카카오 키를 발급받아 KAKAO_APP_KEY를 채우면 카카오맵으로 자동 전환.
+       - 외부 링크(네이버/카카오/구글)는 위쪽 .map-quicklinks 에서 항상 사용 가능.
+    =========================================================== */
+
+    // === 좌표 (힉스유타워 A동, 경기도 용인시 기흥구 중부대로 184) ===
+    const LAT = 37.27553;
+    const LNG = 127.11354;
+    const POPUP_HTML =
+      '<div style="padding:6px 4px;font-family:Pretendard,sans-serif;line-height:1.55">' +
+      '<strong style="color:#C9B582;letter-spacing:0.04em">이음 기공소</strong><br/>' +
+      '<span style="font-size:12px;color:rgba(232,229,222,0.85)">힉스유타워 A동 523-2호</span><br/>' +
+      '<span style="font-size:12px;color:rgba(232,229,222,0.55)">경기도 용인시 기흥구 중부대로 184</span>' +
+      '</div>';
+
+    // === 카카오 옵션 (선택): 키 입력 시 자동 전환 ===
+    // 발급: https://developers.kakao.com → 앱 생성 → JavaScript 키 + 사이트 도메인 등록
+    const KAKAO_APP_KEY = 'YOUR_KAKAO_JAVASCRIPT_APP_KEY';
+
+    function initLeaflet() {
+      const leafletEl = document.getElementById('leafletMap');
+      if (!leafletEl || typeof L === 'undefined') {
+        showLeafletFallback();
+        return;
+      }
+
+      const map = L.map(leafletEl, {
+        center: [LAT, LNG],
+        zoom: 17,
+        zoomControl: true,
+        scrollWheelZoom: false,   // 페이지 스크롤 가로채지 않도록
+        attributionControl: true,
+      });
+
+      // OSM 표준 타일 — robust, free, no key
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      // 골드 톤 마커 아이콘 (SVG inline)
+      const goldPinSvg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="44" viewBox="0 0 32 44">' +
+        '<path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 28 16 28s16-16 16-28C32 7.2 24.8 0 16 0z" fill="#B89A5E" stroke="#0A0A0A" stroke-width="1.5"/>' +
+        '<circle cx="16" cy="16" r="6" fill="#0A0A0A"/>' +
+        '<circle cx="16" cy="16" r="2.5" fill="#C9B582"/>' +
+        '</svg>';
+      const goldIcon = L.divIcon({
+        className: 'eum-marker',
+        html: goldPinSvg,
+        iconSize: [32, 44],
+        iconAnchor: [16, 44],
+        popupAnchor: [0, -40],
+      });
+      L.marker([LAT, LNG], { icon: goldIcon, title: '이음 기공소' })
+        .addTo(map)
+        .bindPopup(POPUP_HTML, { offset: [0, -8] })
+        .openPopup();
+
+      // 클릭 시 휠 줌 활성화 (키보드/터치 접근성 유지)
+      leafletEl.addEventListener('click', () => map.scrollWheelZoom.enable(), { once: true });
+
+      console.log('[EUM] Leaflet/OSM map initialized');
+    }
+
+    function showLeafletFallback() {
+      const wrap = document.getElementById('mapWrap');
+      if (!wrap) return;
+      wrap.innerHTML =
+        '<div class="map-placeholder">' +
+          '<div class="map-placeholder__icon">📍</div>' +
+          '<p class="map-placeholder__title">지도를 불러올 수 없습니다</p>' +
+          '<p class="map-placeholder__body">' +
+            '네트워크 연결을 확인해 주세요.<br/>' +
+            '아래 외부 지도 서비스 링크에서도 위치를 보실 수 있습니다.' +
+          '</p>' +
+        '</div>';
+    }
 
     function initKakaoMap() {
       if (!window.kakao || !window.kakao.maps) return;
-
       kakao.maps.load(() => {
-        const container = document.getElementById('kakaoMap');
-        const options = {
-          center: new kakao.maps.LatLng(LAT, LNG),
-          level: 4,
-        };
-        const map = new kakao.maps.Map(container, options);
+        // Kakao 분기로 전환 — Leaflet 영역 숨기고 Kakao 영역 표시
+        document.getElementById('leafletMap').style.display = 'none';
+        const kakaoEl = document.getElementById('kakaoMap');
+        kakaoEl.style.display = 'block';
 
-        // 마커
+        const map = new kakao.maps.Map(kakaoEl, {
+          center: new kakao.maps.LatLng(LAT, LNG),
+          level: 3,
+        });
         const marker = new kakao.maps.Marker({
           position: new kakao.maps.LatLng(LAT, LNG),
         });
         marker.setMap(map);
 
-        // 인포윈도우
         const infowindow = new kakao.maps.InfoWindow({
-          content: '<div style="padding:10px 14px;font-size:13px;font-family:sans-serif;color:#333;white-space:nowrap;">' +
-                   '<strong>이음 기공소</strong><br/>' +
-                   '힉스유타워 A동 523-2호</div>',
+          content:
+            '<div style="padding:10px 14px;font-size:13px;font-family:sans-serif;color:#222;white-space:nowrap;">' +
+            '<strong>이음 기공소</strong><br/>힉스유타워 A동 523-2호</div>',
         });
         infowindow.open(map, marker);
+        console.log('[EUM] Kakao map initialized');
       });
     }
 
-    // 카카오 앱 키가 설정된 경우에만 SDK 로드
-    if (KAKAO_APP_KEY !== 'YOUR_KAKAO_JAVASCRIPT_APP_KEY') {
+    function tryLoadKakao() {
+      if (KAKAO_APP_KEY === 'YOUR_KAKAO_JAVASCRIPT_APP_KEY' || !KAKAO_APP_KEY) return false;
       const script = document.createElement('script');
       script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_APP_KEY}&autoload=false`;
       script.onload = initKakaoMap;
-      script.onerror = showMapPlaceholder;
+      script.onerror = () => {
+        console.warn('[EUM] Kakao SDK 로드 실패 — Leaflet으로 폴백');
+        initLeaflet();
+      };
       document.head.appendChild(script);
-    } else {
-      showMapPlaceholder();
+      return true;
     }
 
-    function showMapPlaceholder() {
-      const mapEl = document.getElementById('kakaoMap');
-      mapEl.innerHTML = `
-        <div class="map-placeholder">
-          <div class="map-placeholder__icon">📍</div>
-          <p class="map-placeholder__title">관리자 설정이 필요합니다</p>
-          <p class="map-placeholder__body">
-            카카오 JavaScript 앱 키를 설정하면 지도가 표시됩니다.<br/>
-            <code>location/index.html</code> 하단 <code>KAKAO_APP_KEY</code> 값을 교체하세요.
-          </p>
-        </div>`;
-    }
+    // 부팅: 카카오 키가 있으면 카카오, 없으면 Leaflet (기본)
+    if (!tryLoadKakao()) initLeaflet();
   </script>
 </body>
 </html>

@@ -20,3 +20,6 @@ Thumbs.db
 *.swp
 *.log
 frames_smooth/
+
+# Video draft (5MB+, not used by current pipeline)
+assets/video/
