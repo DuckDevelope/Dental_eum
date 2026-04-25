@@ -1,0 +1,490 @@
+/* ============================================================
+   RESET & BASE
+============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --gold: #B89A5E;
+  --gold-light: #C9B582;
+  --gold-dim: rgba(184, 154, 94, 0.6);
+  --bg-dark: #0A0A0A;
+  --bg-card: #111111;
+  --text-primary: #E8E5DE;
+  --text-muted: rgba(232, 229, 222, 0.55);
+  --font-kr: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-en: 'Cormorant Garamond', Georgia, serif;
+
+  /* Timing */
+  --ease-prestige: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+html {
+  /* NOTE: scroll-behavior: smooth는 의도적으로 미적용 —
+     히어로 sticky pin + rAF lerp 자체가 부드러운 보간을 처리하며,
+     anchor 클릭 등 외부 스무스 스크롤은 별도 JS에서 다룬다. */
+  background: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+body {
+  font-family: var(--font-kr);
+  font-feature-settings: 'kern', 'liga';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-dark);
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   LOADER — 미니멀 (워드마크 + 점 3개 펄스). 카운터 제거.
+============================================================ */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  transition: opacity 0.8s var(--ease-prestige);
+}
+
+.loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader__text {
+  font-family: var(--font-kr);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.22em;
+  margin-bottom: 0.1rem;
+}
+
+.loader__en {
+  font-family: var(--font-en);
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.42em;
+  color: rgba(184, 154, 94, 0.55);
+  text-transform: uppercase;
+  margin-bottom: 1.6rem;
+}
+
+/* 점 3개 펄스 — 골드 톤, 매우 절제 */
+.loader__dots {
+  display: inline-flex;
+  gap: 8px;
+}
+.loader__dots > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.25;
+  animation: loader-pulse 1.4s ease-in-out infinite;
+}
+.loader__dots > span:nth-child(2) { animation-delay: 0.18s; }
+.loader__dots > span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes loader-pulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50%       { opacity: 1;    transform: translateY(-3px); }
+}
+
+/* ============================================================
+   HERO SECTION — CSS sticky pin (no GSAP needed)
+   .hero 의 height은 JS가 설정 (100vh + SCROLL_TOTAL).
+   .hero__pin 이 sticky로 viewport 상단에 고정.
+============================================================ */
+.hero {
+  position: relative;
+  width: 100%;
+  /* height은 JS에서 동적 설정. 스크립트 비활성/로딩 중 fallback으로 100vh */
+  min-height: 100vh;
+  background: var(--bg-dark);
+}
+
+.hero__pin {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  /* 새 stacking context — fixed nav와 z-index 분리 안전 */
+  isolation: isolate;
+}
+
+/* Canvas: native 1280×720 attribute. CSS object-fit:cover로 viewport 스케일.
+   drawImage(img,0,0) 1:1 memcpy + GPU 컴포지터 업스케일 → 메인 스레드 부담 최소. */
+.hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  z-index: 1;
+  /* GPU 레이어 강제: 컴포지터가 독립 처리하도록 */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Luxury vignette — strengthened (권고안 2) */
+.hero__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    radial-gradient(
+      ellipse 80% 80% at 50% 50%,
+      transparent 30%,
+      rgba(0, 0, 0, 0.75) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.3) 18%,
+      transparent 35%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.70) 75%,
+      rgba(0, 0, 0, 0.92) 100%
+    );
+}
+
+/* Top mask band — "Precision Craftsmanship" 영역 보호 (권고안 1) */
+.hero__top-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12%;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.70) 50%,
+    transparent 100%
+  );
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1.1rem;
+}
+
+.hero__top-label {
+  font-family: var(--font-en);
+  font-size: clamp(0.6rem, 1vw, 0.82rem);
+  font-weight: 300;
+  letter-spacing: 0.55em;
+  color: rgba(184, 154, 94, 0.75);
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+}
+
+/* Fade-to-black overlay (권고안 2) — JS controls opacity via progress */
+.hero__fade-black {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  transition: none; /* JS drives this directly */
+}
+
+/* ============================================================
+   HERO TEXT LAYERS
+============================================================ */
+.hero__text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 2rem;
+  z-index: 5;
+
+  /* Initial: invisible */
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+/* Layer A — centered */
+.hero__text--a {
+  top: 50%;
+  transform: translateY(-42%);
+}
+
+/* Layer B — center */
+.hero__text--b {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Layer C — bottom area, below bright tooth image */
+.hero__text--c {
+  bottom: 8%;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+/* Typography */
+.hero__eyebrow {
+  font-family: var(--font-en);
+  font-size: clamp(0.65rem, 1.1vw, 0.88rem);
+  font-weight: 400;
+  letter-spacing: 0.42em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-top: 1.4rem;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,0,0,0.8);
+}
+
+.hero__headline {
+  font-family: var(--font-kr);
+  font-size: clamp(2.4rem, 6.5vw, 6rem);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  text-shadow:
+    0 2px 40px rgba(0, 0, 0, 0.9),
+    0 4px 80px rgba(0, 0, 0, 0.7),
+    0 0 120px rgba(0, 0, 0, 0.5);
+}
+
+.hero__body {
+  font-family: var(--font-kr);
+  font-size: clamp(1.3rem, 3.2vw, 2.8rem);
+  font-weight: 300;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  text-shadow:
+    0 2px 30px rgba(0, 0, 0, 0.95),
+    0 4px 60px rgba(0, 0, 0, 0.8),
+    0 0 100px rgba(0, 0, 0, 0.6);
+  background: radial-gradient(ellipse 120% 200% at 50% 50%, rgba(0,0,0,0.4) 0%, transparent 70%);
+  padding: 1rem 2rem;
+  border-radius: 4px;
+}
+
+.hero__sub {
+  font-family: var(--font-kr);
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-weight: 300;
+  line-height: 1.85;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  text-shadow:
+    0 2px 20px rgba(0, 0, 0, 0.95),
+    0 4px 40px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  background: radial-gradient(ellipse 130% 250% at 50% 50%, rgba(0,0,0,0.45) 0%, transparent 70%);
+  padding: 0.8rem 1.8rem;
+  border-radius: 4px;
+}
+
+.hero__cta-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--gold);
+}
+
+.hero__cta-text {
+  font-family: var(--font-kr);
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+}
+
+.hero__cta-arrow {
+  font-size: 1.2rem;
+  animation: float-y 2s ease-in-out infinite;
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+/* ============================================================
+   PROGRESS BAR
+============================================================ */
+.hero__progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  z-index: 6;
+}
+
+.hero__progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--gold);
+  transition: width 0.05s linear;
+}
+
+/* ============================================================
+   PLACEHOLDER / NEXT SECTION
+============================================================ */
+.placeholder {
+  min-height: 100vh;
+  background: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  border-top: 1px solid rgba(184, 154, 94, 0.15);
+}
+
+.placeholder__inner {
+  max-width: 640px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.placeholder__eyebrow {
+  font-family: var(--font-en);
+  font-size: 0.78rem;
+  font-weight: 300;
+  letter-spacing: 0.42em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.placeholder__title {
+  font-family: var(--font-kr);
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 600;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.placeholder__body {
+  font-family: var(--font-kr);
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  font-weight: 300;
+  line-height: 1.9;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.placeholder__contact {
+  font-style: normal;
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.placeholder__contact a {
+  font-family: var(--font-kr);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold-dim);
+  padding-bottom: 2px;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.placeholder__contact a:hover {
+  color: var(--gold-light);
+  border-color: var(--gold-light);
+}
+
+.placeholder__contact .sep {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 767px) {
+  .hero__text--a {
+    top: 45%;
+    transform: translateY(-50%);
+    padding: 0 1.5rem;
+  }
+
+  .hero__text--b {
+    padding: 0 1.5rem;
+  }
+
+  .hero__text--c {
+    bottom: 10%;
+    padding: 0 1.5rem;
+  }
+
+  .hero__headline {
+    font-size: clamp(2rem, 9vw, 3.2rem);
+  }
+
+  .hero__body {
+    font-size: clamp(1.15rem, 5vw, 1.8rem);
+  }
+
+  .hero__sub {
+    font-size: 0.92rem;
+  }
+
+  .placeholder__contact {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .placeholder__contact .sep {
+    display: none;
+  }
+}
+
+/* ============================================================
+   PREFERS-REDUCED-MOTION
+   — JS handles text visibility via staticFallback(). CSS only
+     stops animations; no !important override of opacity/transform
+     so JS can control exactly which layer is shown.
+============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .loader__dots > span {
+    animation: none;
+    opacity: 0.6;
+  }
+
+  .hero__cta-arrow {
+    animation: none;
+  }
+
+  /* Do NOT force opacity:1 here — JS staticFallback() handles this */
+  /* Only suppress animation/transition; let JS control per-layer */
+  .hero__text {
+    transition: none;
+  }
+}

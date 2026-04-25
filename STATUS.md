@@ -2,7 +2,36 @@
 
 > 세션 재개 시 가장 먼저 읽는 스냅샷. 의미 있는 진전·결정·블로커 변경 시 즉시 갱신.
 
-## 현재 상태 (2026-04-26 — v3.2 스크롤 부드러움 + 지도 동작)
+## 현재 상태 (2026-04-26 — v4 분위기 전환: 영상 hero + 다크/라이트 교차 섹션, 아모레 톤)
+
+박사님 지시: "아모레퍼시픽처럼 분위기 다 바꾸자". v3.x frame sequence는 보존하고 메인을 영상 기반으로 갈아엎음.
+
+- ✅ **영상 자료 트랜스코딩 완료 (assets/video/)**
+  - `cad-1080.mp4` (1.4MB, 세로 1080×1920) — 박사님 명시 메인 hero. CAD 작업 화면.
+  - `closeup-1080.mp4` (940KB, 가로 1920×1080) — 보철 클로즈업 (박사님: "틀니" 단어 금지)
+  - `result-1080.mp4` (2.2MB, 세로 1080×2048) — 기공 결과물 실물 트레이
+  - `*-poster.jpg` 3장 — 영상 로딩 전 정적 이미지 (preload)
+  - 원본 4K (~50MB)는 `_raw/`에 symlink (gitignore)
+- ✅ **메인 페이지 v4 재설계** (Opus)
+  - Hero: CAD 영상 풀스크린 autoplay·muted·loop·playsinline + dark vignette + SVG grain noise + top mask + 미니멀 카피
+  - Section 1 (라이트 베이지) — "장인의 4단계" Process 카드 4개 (본뜨기/설계/제작/마무리)
+  - Section 2 (다크) — "이음의 작업 풍경" Story 가로 스크롤 카루셀 (영상 3개 + Coming Soon 카드)
+  - Section 3 (라이트 베이지) — "주력 작업 분야" Specialty 카드 4개 (크라운/지르코니아/세라믹 인레이/의치)
+  - Section 4 (다크 CTA) — 거래 문의 강조 + 문의하기 / 오시는 길 버튼
+  - 다크/라이트 교차로 호흡감 (아모레 패턴)
+  - IntersectionObserver fade-up reveal (data-reveal + .is-visible 토글, transition 1.1s)
+  - reduced-motion: 영상 정지 + reveal 즉시
+- ✅ **frame sequence(v3.x) 보존**
+  - `assets/js/frames-hero.js` + `assets/css/frames-hero.css` — 박사님 지시 "필요할 때 쓰자"
+  - `frames_webp/` 디렉토리 그대로 (26MB, 476장)
+  - 부활 시 index.html에서 main.js 자리에 frames-hero.js 로드 + main.css 자리에 frames-hero.css 로드
+- ✅ **회귀 테스트 분리**
+  - `_qa/check-v4-main.mjs` — 신규. 영상 hero + 섹션 reveal + 금지어 "틀니" 검사 등 27/27 PASS
+  - `_qa/check-v3-final.mjs` — frames-hero 부활 시점 검증용으로 보존 (현재 메인엔 fail이 정상)
+- ⏭ 박사님 카피 윤문 필요 (Hero / 4 섹션 lede / 카드 본문)
+- ⏭ 소장님 실제 작업장 영상·사진 받으시면 Story 카드의 "Coming Soon" 자리 + 영상 일부 교체
+
+## 이전 상태 (2026-04-26 — v3.2 스크롤 부드러움 + 지도 동작)
 
 - ✅ **v3.2 히어로 스크롤 파이프라인 재설계 (Opus, 박사님 지시 — 끊김 끝까지 해결)**
   - GSAP ScrollTrigger 제거. CSS sticky pin + 자체 rAF lerp 구동

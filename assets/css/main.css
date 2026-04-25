@@ -1,6 +1,8 @@
 /* ============================================================
-   RESET & BASE
+   이음 기공소 — v4 메인 스타일 (아모레 톤: 영상 hero + 다크/라이트 교차)
+   v3.x frame sequence 스타일은 frames-hero.css 로 보존됨.
 ============================================================ */
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -8,27 +10,36 @@
 }
 
 :root {
+  /* 다크 톤 */
+  --bg-dark: #0A0A0A;
+  --bg-dark-soft: #131313;
+  --text-on-dark: #E8E5DE;
+  --text-on-dark-muted: rgba(232, 229, 222, 0.6);
+
+  /* 라이트 톤 (베이지 오프화이트) */
+  --bg-light: #F4EFE5;
+  --bg-light-soft: #FAF7F0;
+  --text-on-light: #1A1A1A;
+  --text-on-light-muted: rgba(26, 26, 26, 0.55);
+
+  /* 골드 액센트 — 라이트/다크 양쪽에서 사용 */
   --gold: #B89A5E;
   --gold-light: #C9B582;
-  --gold-dim: rgba(184, 154, 94, 0.6);
-  --bg-dark: #0A0A0A;
-  --bg-card: #111111;
-  --text-primary: #E8E5DE;
-  --text-muted: rgba(232, 229, 222, 0.55);
+  --gold-deep: #8E7340;
+  --gold-dim: rgba(184, 154, 94, 0.55);
+
+  /* Typography */
   --font-kr: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-en: 'Cormorant Garamond', Georgia, serif;
 
-  /* Timing */
+  /* Easing */
   --ease-prestige: cubic-bezier(0.25, 0.1, 0.25, 1);
   --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 html {
-  /* NOTE: scroll-behavior: smooth는 의도적으로 미적용 —
-     히어로 sticky pin + rAF lerp 자체가 부드러운 보간을 처리하며,
-     anchor 클릭 등 외부 스무스 스크롤은 별도 JS에서 다룬다. */
   background: var(--bg-dark);
-  color: var(--text-primary);
+  color: var(--text-on-dark);
 }
 
 body {
@@ -40,451 +51,529 @@ body {
   overflow-x: hidden;
 }
 
-/* ============================================================
-   LOADER — 미니멀 (워드마크 + 점 3개 펄스). 카운터 제거.
-============================================================ */
-.loader {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: var(--bg-dark);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  transition: opacity 0.8s var(--ease-prestige);
-}
-
-.loader.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.loader__text {
-  font-family: var(--font-kr);
-  font-size: 1.35rem;
-  font-weight: 500;
-  color: var(--gold);
-  letter-spacing: 0.22em;
-  margin-bottom: 0.1rem;
-}
-
-.loader__en {
-  font-family: var(--font-en);
-  font-size: 0.72rem;
-  font-weight: 300;
-  letter-spacing: 0.42em;
-  color: rgba(184, 154, 94, 0.55);
-  text-transform: uppercase;
-  margin-bottom: 1.6rem;
-}
-
-/* 점 3개 펄스 — 골드 톤, 매우 절제 */
-.loader__dots {
-  display: inline-flex;
-  gap: 8px;
-}
-.loader__dots > span {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--gold);
-  opacity: 0.25;
-  animation: loader-pulse 1.4s ease-in-out infinite;
-}
-.loader__dots > span:nth-child(2) { animation-delay: 0.18s; }
-.loader__dots > span:nth-child(3) { animation-delay: 0.36s; }
-
-@keyframes loader-pulse {
-  0%, 100% { opacity: 0.25; transform: translateY(0); }
-  50%       { opacity: 1;    transform: translateY(-3px); }
+img, video {
+  max-width: 100%;
+  display: block;
 }
 
 /* ============================================================
-   HERO SECTION — CSS sticky pin (no GSAP needed)
-   .hero 의 height은 JS가 설정 (100vh + SCROLL_TOTAL).
-   .hero__pin 이 sticky로 viewport 상단에 고정.
+   HERO — 풀스크린 영상 + dark vignette + grain overlay
 ============================================================ */
 .hero {
   position: relative;
   width: 100%;
-  /* height은 JS에서 동적 설정. 스크립트 비활성/로딩 중 fallback으로 100vh */
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 600px;
+  overflow: hidden;
   background: var(--bg-dark);
 }
 
-.hero__pin {
-  position: sticky;
-  top: 0;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  /* 새 stacking context — fixed nav와 z-index 분리 안전 */
-  isolation: isolate;
-}
-
-/* Canvas: native 1280×720 attribute. CSS object-fit:cover로 viewport 스케일.
-   drawImage(img,0,0) 1:1 memcpy + GPU 컴포지터 업스케일 → 메인 스레드 부담 최소. */
-.hero__canvas {
+.hero__video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  display: block;
   object-fit: cover;
   z-index: 1;
-  /* GPU 레이어 강제: 컴포지터가 독립 처리하도록 */
+  /* 영상은 어차피 dark vignette 위에 살짝 살짝 보이는 톤이 의도이므로
+     약간 어둡게 + 살짝 흐리게 (아모레 톤). */
+  filter: brightness(0.78) contrast(1.04) saturate(0.92);
   transform: translateZ(0);
   will-change: transform;
 }
 
-/* Luxury vignette — strengthened (권고안 2) */
+/* Vignette: 위/아래/모서리에 다크 그라데이션. 카피 가독성 확보. */
 .hero__vignette {
   position: absolute;
   inset: 0;
-  pointer-events: none;
   z-index: 2;
+  pointer-events: none;
   background:
-    radial-gradient(
-      ellipse 80% 80% at 50% 50%,
+    radial-gradient(ellipse 90% 90% at 50% 50%,
       transparent 30%,
-      rgba(0, 0, 0, 0.75) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.88) 0%,
-      rgba(0, 0, 0, 0.3) 18%,
-      transparent 35%,
-      transparent 50%,
-      rgba(0, 0, 0, 0.70) 75%,
-      rgba(0, 0, 0, 0.92) 100%
-    );
+      rgba(0, 0, 0, 0.55) 80%,
+      rgba(0, 0, 0, 0.78) 100%),
+    linear-gradient(to bottom,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.18) 22%,
+      rgba(0, 0, 0, 0.18) 70%,
+      rgba(0, 0, 0, 0.78) 100%);
 }
 
-/* Top mask band — "Precision Craftsmanship" 영역 보호 (권고안 1) */
+/* Grain: SVG noise 인라인 — film texture, 매우 미세 */
+.hero__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* Top mask 살짝 — 글로벌 nav 가독성 보호 */
 .hero__top-mask {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 12%;
+  z-index: 4;
   pointer-events: none;
-  z-index: 3;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.95) 0%,
-    rgba(0, 0, 0, 0.70) 50%,
-    transparent 100%
-  );
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 1.1rem;
+  background: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.35) 60%,
+    transparent 100%);
 }
 
-.hero__top-label {
-  font-family: var(--font-en);
-  font-size: clamp(0.6rem, 1vw, 0.82rem);
-  font-weight: 300;
-  letter-spacing: 0.55em;
-  color: rgba(184, 154, 94, 0.75);
-  text-transform: uppercase;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.9);
-}
-
-/* Fade-to-black overlay (권고안 2) — JS controls opacity via progress */
-.hero__fade-black {
+/* Hero content — 가운데 정렬 미니멀 카피 */
+.hero__content {
   position: absolute;
   inset: 0;
-  background: #000;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 4;
-  transition: none; /* JS drives this directly */
-}
-
-/* ============================================================
-   HERO TEXT LAYERS
-============================================================ */
-.hero__text {
-  position: absolute;
-  left: 0;
-  right: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 0 2rem;
-  z-index: 5;
-
-  /* Initial: invisible */
-  opacity: 0;
-  pointer-events: none;
-  will-change: opacity, transform;
+  padding: 0 1.5rem;
 }
 
-/* Layer A — centered */
-.hero__text--a {
-  top: 50%;
-  transform: translateY(-42%);
-}
-
-/* Layer B — center */
-.hero__text--b {
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* Layer C — bottom area, below bright tooth image */
-.hero__text--c {
-  bottom: 8%;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.4rem;
-}
-
-/* Typography */
 .hero__eyebrow {
   font-family: var(--font-en);
-  font-size: clamp(0.65rem, 1.1vw, 0.88rem);
+  font-size: clamp(0.7rem, 1vw, 0.9rem);
   font-weight: 400;
   letter-spacing: 0.42em;
-  color: var(--gold);
+  color: var(--gold-light);
   text-transform: uppercase;
-  margin-top: 1.4rem;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0,0,0,0.8);
+  margin-bottom: 1.4rem;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
+  /* 살짝 등장 */
+  opacity: 0;
+  transform: translateY(8px);
+  animation: heroFadeIn 1.2s var(--ease-out-expo) 0.3s forwards;
 }
 
 .hero__headline {
   font-family: var(--font-kr);
-  font-size: clamp(2.4rem, 6.5vw, 6rem);
-  font-weight: 600;
+  font-size: clamp(2.2rem, 6vw, 5.4rem);
+  font-weight: 500;
   line-height: 1.18;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
+  color: #fff;
   text-shadow:
-    0 2px 40px rgba(0, 0, 0, 0.9),
-    0 4px 80px rgba(0, 0, 0, 0.7),
-    0 0 120px rgba(0, 0, 0, 0.5);
-}
-
-.hero__body {
-  font-family: var(--font-kr);
-  font-size: clamp(1.3rem, 3.2vw, 2.8rem);
-  font-weight: 300;
-  line-height: 1.6;
-  letter-spacing: 0.04em;
-  color: var(--text-primary);
-  text-shadow:
-    0 2px 30px rgba(0, 0, 0, 0.95),
-    0 4px 60px rgba(0, 0, 0, 0.8),
-    0 0 100px rgba(0, 0, 0, 0.6);
-  background: radial-gradient(ellipse 120% 200% at 50% 50%, rgba(0,0,0,0.4) 0%, transparent 70%);
-  padding: 1rem 2rem;
-  border-radius: 4px;
+    0 2px 36px rgba(0, 0, 0, 0.9),
+    0 4px 80px rgba(0, 0, 0, 0.6);
+  margin-bottom: 1.3rem;
+  max-width: 18ch;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: heroFadeIn 1.4s var(--ease-out-expo) 0.55s forwards;
 }
 
 .hero__sub {
   font-family: var(--font-kr);
-  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
   font-weight: 300;
   line-height: 1.85;
   letter-spacing: 0.04em;
-  color: var(--text-primary);
-  text-shadow:
-    0 2px 20px rgba(0, 0, 0, 0.95),
-    0 4px 40px rgba(0, 0, 0, 0.8);
-  text-align: center;
-  background: radial-gradient(ellipse 130% 250% at 50% 50%, rgba(0,0,0,0.45) 0%, transparent 70%);
-  padding: 0.8rem 1.8rem;
-  border-radius: 4px;
+  color: rgba(232, 229, 222, 0.92);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.85);
+  max-width: 32ch;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: heroFadeIn 1.4s var(--ease-out-expo) 0.85s forwards;
 }
 
-.hero__cta-hint {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--gold);
+@keyframes heroFadeIn {
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.hero__cta-text {
-  font-family: var(--font-kr);
-  font-size: 0.82rem;
-  font-weight: 400;
-  letter-spacing: 0.22em;
-}
-
-.hero__cta-arrow {
-  font-size: 1.2rem;
-  animation: float-y 2s ease-in-out infinite;
-}
-
-@keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(6px); }
-}
-
-/* ============================================================
-   PROGRESS BAR
-============================================================ */
-.hero__progress {
+/* Scroll hint — 페이지 하단, 스크롤 시작 시 페이드아웃 */
+.hero__scroll-hint {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.08);
+  left: 50%;
+  bottom: 2.4rem;
+  transform: translateX(-50%);
   z-index: 6;
-}
-
-.hero__progress-bar {
-  height: 100%;
-  width: 0%;
-  background: var(--gold);
-  transition: width 0.05s linear;
-}
-
-/* ============================================================
-   PLACEHOLDER / NEXT SECTION
-============================================================ */
-.placeholder {
-  min-height: 100vh;
-  background: var(--bg-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6rem 2rem;
-  border-top: 1px solid rgba(184, 154, 94, 0.15);
-}
-
-.placeholder__inner {
-  max-width: 640px;
-  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 0.6rem;
+  color: rgba(232, 229, 222, 0.75);
+  font-family: var(--font-en);
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  animation: heroFadeIn 1.4s var(--ease-out-expo) 1.2s forwards;
+  transition: opacity 0.5s var(--ease-prestige), transform 0.5s var(--ease-prestige);
 }
 
-.placeholder__eyebrow {
+.hero__scroll-hint.is-hidden {
+  opacity: 0 !important;
+  transform: translate(-50%, 12px);
+  pointer-events: none;
+}
+
+.hero__scroll-line {
+  width: 1px;
+  height: 36px;
+  background: linear-gradient(to bottom, transparent, rgba(232, 229, 222, 0.7), transparent);
+  animation: scrollLine 2.2s ease-in-out infinite;
+}
+
+@keyframes scrollLine {
+  0%, 100% { transform: scaleY(0.4); transform-origin: top; }
+  50%       { transform: scaleY(1); }
+}
+
+/* ============================================================
+   SECTION 공통 — fade-up reveal
+============================================================ */
+.section {
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 4vw, 4rem);
+  position: relative;
+}
+
+.section--dark { background: var(--bg-dark);  color: var(--text-on-dark); }
+.section--light { background: var(--bg-light); color: var(--text-on-light); }
+
+.section__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section__eyebrow {
   font-family: var(--font-en);
   font-size: 0.78rem;
-  font-weight: 300;
+  font-weight: 400;
   letter-spacing: 0.42em;
   color: var(--gold);
   text-transform: uppercase;
+  margin-bottom: 1rem;
 }
+.section--light .section__eyebrow { color: var(--gold-deep); }
 
-.placeholder__title {
+.section__title {
   font-family: var(--font-kr);
-  font-size: clamp(2rem, 5vw, 3.6rem);
-  font-weight: 600;
+  font-size: clamp(1.9rem, 4.4vw, 3.4rem);
+  font-weight: 500;
   line-height: 1.22;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
+  margin-bottom: 1rem;
+  max-width: 22ch;
 }
 
-.placeholder__body {
+.section__lede {
   font-family: var(--font-kr);
-  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
   font-weight: 300;
-  line-height: 1.9;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  max-width: 50ch;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+.section--dark  .section__lede { color: var(--text-on-dark-muted); }
+.section--light .section__lede { color: var(--text-on-light-muted); }
+
+/* Reveal animation */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 1.1s var(--ease-out-expo), transform 1.1s var(--ease-out-expo);
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+[data-reveal-delay="1"] { transition-delay: 0.08s; }
+[data-reveal-delay="2"] { transition-delay: 0.16s; }
+[data-reveal-delay="3"] { transition-delay: 0.24s; }
+[data-reveal-delay="4"] { transition-delay: 0.32s; }
+
+/* ============================================================
+   PROCESS GRID — "장인의 4단계" (라이트 섹션)
+============================================================ */
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2.5rem;
 }
 
-.placeholder__contact {
-  font-style: normal;
+.process-card {
+  position: relative;
+  padding: 2.4rem 1.8rem;
+  background: var(--bg-light-soft);
+  border: 1px solid rgba(184, 154, 94, 0.18);
+  border-radius: 4px;
+  transition: transform 0.4s var(--ease-prestige),
+              border-color 0.4s var(--ease-prestige),
+              box-shadow 0.4s var(--ease-prestige);
+}
+.process-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+}
+
+.process-card__num {
+  font-family: var(--font-en);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--gold-deep);
+  margin-bottom: 1.2rem;
+}
+
+.process-card__title {
+  font-family: var(--font-kr);
+  font-size: 1.18rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--text-on-light);
+  margin-bottom: 0.9rem;
+}
+
+.process-card__body {
+  font-family: var(--font-kr);
+  font-size: 0.88rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--text-on-light-muted);
+}
+
+/* ============================================================
+   STORY RAIL — 다크 섹션, 영상/스틸 가로 카루셀
+============================================================ */
+.story-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 360px);
+  gap: 1.4rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 1.4rem;
+  margin: 0 calc(-1 * clamp(1.5rem, 4vw, 4rem));
+  padding-left: clamp(1.5rem, 4vw, 4rem);
+  padding-right: clamp(1.5rem, 4vw, 4rem);
+  /* 부드러운 모멘텀 스크롤 (iOS) */
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(184, 154, 94, 0.4) transparent;
+}
+.story-rail::-webkit-scrollbar { height: 4px; }
+.story-rail::-webkit-scrollbar-track { background: transparent; }
+.story-rail::-webkit-scrollbar-thumb { background: rgba(184, 154, 94, 0.4); border-radius: 4px; }
+
+.story-card {
+  position: relative;
+  scroll-snap-align: start;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--bg-dark-soft);
+  border: 1px solid rgba(184, 154, 94, 0.14);
+  cursor: pointer;
+}
+
+.story-card__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.4s var(--ease-out-expo), filter 0.6s var(--ease-prestige);
+  filter: brightness(0.78) saturate(0.92);
+}
+.story-card:hover .story-card__media {
+  transform: scale(1.04);
+  filter: brightness(0.92) saturate(1);
+}
+
+.story-card__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to top,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.25) 45%,
+    transparent 70%);
+}
+
+.story-card__caption {
+  position: absolute;
+  left: 1.4rem;
+  right: 1.4rem;
+  bottom: 1.4rem;
+  z-index: 3;
+}
+
+.story-card__eyebrow {
+  font-family: var(--font-en);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.story-card__title {
+  font-family: var(--font-kr);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: #fff;
+  margin-bottom: 0.35rem;
+}
+
+.story-card__sub {
+  font-family: var(--font-kr);
+  font-size: 0.8rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: rgba(232, 229, 222, 0.78);
+}
+
+/* ============================================================
+   SPECIALTY GRID — "주력 작업 분야" (라이트 섹션)
+============================================================ */
+.specialty-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.specialty-card {
+  padding: 2.6rem 1.8rem 2.2rem;
+  background: var(--bg-light-soft);
+  border: 1px solid rgba(184, 154, 94, 0.18);
+  border-radius: 4px;
+  transition: transform 0.4s var(--ease-prestige),
+              border-color 0.4s var(--ease-prestige);
+}
+.specialty-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold);
+}
+
+.specialty-card__icon {
+  font-family: var(--font-en);
+  font-size: 1.3rem;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: var(--gold-deep);
+  margin-bottom: 1rem;
+}
+
+.specialty-card__title {
+  font-family: var(--font-kr);
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin-bottom: 0.7rem;
+  color: var(--text-on-light);
+}
+
+.specialty-card__body {
+  font-family: var(--font-kr);
+  font-size: 0.86rem;
+  font-weight: 300;
+  line-height: 1.72;
+  color: var(--text-on-light-muted);
+}
+
+/* ============================================================
+   CTA strip — 다크 섹션 마감 (연락 유도)
+============================================================ */
+.cta-strip {
+  text-align: center;
+}
+
+.cta-strip__title {
+  font-family: var(--font-kr);
+  font-size: clamp(1.7rem, 3.4vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  margin-bottom: 1.6rem;
+}
+
+.cta-strip__buttons {
   display: flex;
-  gap: 1.2rem;
-  align-items: center;
   flex-wrap: wrap;
   justify-content: center;
+  gap: 0.8rem;
+  margin-top: 2rem;
 }
 
-.placeholder__contact a {
+.cta-btn {
+  display: inline-block;
+  padding: 0.95rem 2.2rem;
   font-family: var(--font-kr);
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-  color: var(--gold);
+  font-size: 0.88rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   text-decoration: none;
-  border-bottom: 1px solid var(--gold-dim);
-  padding-bottom: 2px;
-  transition: color 0.3s, border-color 0.3s;
+  border-radius: 2px;
+  transition: background 0.3s var(--ease-prestige),
+              border-color 0.3s var(--ease-prestige),
+              color 0.3s var(--ease-prestige);
 }
 
-.placeholder__contact a:hover {
-  color: var(--gold-light);
+.cta-btn--primary {
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: var(--bg-dark);
+}
+.cta-btn--primary:hover {
+  background: var(--gold-light);
   border-color: var(--gold-light);
 }
 
-.placeholder__contact .sep {
-  color: var(--text-muted);
-  font-size: 0.75rem;
+.cta-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(232, 229, 222, 0.3);
+  color: var(--text-on-dark);
+}
+.cta-btn--ghost:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
 }
 
 /* ============================================================
    RESPONSIVE
 ============================================================ */
 @media (max-width: 767px) {
-  .hero__text--a {
-    top: 45%;
-    transform: translateY(-50%);
-    padding: 0 1.5rem;
-  }
-
-  .hero__text--b {
-    padding: 0 1.5rem;
-  }
-
-  .hero__text--c {
-    bottom: 10%;
-    padding: 0 1.5rem;
-  }
-
-  .hero__headline {
-    font-size: clamp(2rem, 9vw, 3.2rem);
-  }
-
-  .hero__body {
-    font-size: clamp(1.15rem, 5vw, 1.8rem);
-  }
-
-  .hero__sub {
-    font-size: 0.92rem;
-  }
-
-  .placeholder__contact {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .placeholder__contact .sep {
-    display: none;
-  }
+  .hero__headline { max-width: 16ch; }
+  .hero__scroll-hint { bottom: 1.6rem; }
+  .story-rail { grid-auto-columns: minmax(240px, 78vw); }
 }
 
 /* ============================================================
    PREFERS-REDUCED-MOTION
-   — JS handles text visibility via staticFallback(). CSS only
-     stops animations; no !important override of opacity/transform
-     so JS can control exactly which layer is shown.
 ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .loader__dots > span {
+  .hero__eyebrow,
+  .hero__headline,
+  .hero__sub,
+  .hero__scroll-hint {
     animation: none;
-    opacity: 0.6;
+    opacity: 1;
+    transform: none;
   }
-
-  .hero__cta-arrow {
-    animation: none;
-  }
-
-  /* Do NOT force opacity:1 here — JS staticFallback() handles this */
-  /* Only suppress animation/transition; let JS control per-layer */
-  .hero__text {
+  .hero__scroll-line { animation: none; }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
     transition: none;
   }
+  .hero__video { display: none; }
+  .hero { background: #0A0A0A url(/dev/null) center/cover; }
 }

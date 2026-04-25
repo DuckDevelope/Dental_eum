@@ -21,5 +21,6 @@ Thumbs.db
 *.log
 frames_smooth/
 
-# Video draft (5MB+, not used by current pipeline)
-assets/video/
+# 이전 hero.mp4 draft (v3 단계 잔재) — 신규 v4 영상 자산은 git에 포함됨
+assets/video/hero.mp4
+assets/video/_raw/
