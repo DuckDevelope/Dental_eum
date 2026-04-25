@@ -8,7 +8,7 @@
 ============================================================ */
 const FRAME_COUNT         = 476;
 const FRAME_DIR           = 'frames_webp/';
-const SCROLL_PX_PER_FRAME = 4;                              // 476 × 4 ≈ 1904px (스크롤 총 길이 유사)
+const SCROLL_PX_PER_FRAME = 1.5;                            // 476 × 1.5 ≈ 714px (휠 짧게 = 빠른 frame 변화, 박사님 제안)
 const SCROLL_TOTAL        = FRAME_COUNT * SCROLL_PX_PER_FRAME;
 const LOAD_PRIORITY       = 60;
 
