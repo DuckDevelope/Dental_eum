@@ -6,14 +6,14 @@
 /* ============================================================
    CONFIG
 ============================================================ */
-const FRAME_COUNT         = 192;
-const FRAME_DIR           = 'frames/';
-const SCROLL_PX_PER_FRAME = 8;                              // 192 × 8 = 1536px
+const FRAME_COUNT         = 476;
+const FRAME_DIR           = 'frames_webp/';
+const SCROLL_PX_PER_FRAME = 4;                              // 476 × 4 ≈ 1904px (스크롤 총 길이 유사)
 const SCROLL_TOTAL        = FRAME_COUNT * SCROLL_PX_PER_FRAME;
-const LOAD_PRIORITY       = 30;
+const LOAD_PRIORITY       = 60;
 
 function framePath(n) {
-  return FRAME_DIR + String(n).padStart(4, '0') + '.jpg';
+  return FRAME_DIR + String(n).padStart(4, '0') + '.webp';
 }
 
 /* ============================================================
@@ -84,10 +84,16 @@ function drawFrame(idx) {
 ============================================================ */
 function loadImage(src) {
   return new Promise((resolve) => {
-    const img  = new Image();
-    img.onload  = () => resolve(img);
+    const img = new Image();
+    img.onload = () => {
+      if (img.decode) {
+        img.decode().then(() => resolve(img)).catch(() => resolve(img));
+      } else {
+        resolve(img);
+      }
+    };
     img.onerror = () => resolve(null);
-    img.src     = src;
+    img.src = src;
   });
 }
 
@@ -178,7 +184,7 @@ function initScrollTrigger() {
     start:   'top top',
     end:     `+=${SCROLL_TOTAL}`,
     pin:     true,
-    scrub:   0.3,
+    scrub:   0.6,
     anticipatePin: 1,
 
     onUpdate(self) {
