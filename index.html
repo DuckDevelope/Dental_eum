@@ -24,8 +24,13 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="assets/css/page.css?v=8" />
-  <link rel="stylesheet" href="assets/css/main.css?v=8" />
+  <link rel="stylesheet" href="assets/css/page.css?v=9" />
+  <link rel="stylesheet" href="assets/css/main.css?v=9" />
+
+  <!-- Critical hero frames: HTML 파싱 시점에 미리 받기 시작 -->
+  <link rel="preload" as="image" href="frames_webp/0001.webp" fetchpriority="high" />
+  <link rel="preload" as="image" href="frames_webp/0003.webp" />
+  <link rel="preload" as="image" href="frames_webp/0005.webp" />
 </head>
 <body>
 
@@ -107,7 +112,7 @@
     <span class="loader__sub-hidden" id="loaderSub" style="display:none"></span>
   </div>
 
-  <script src="assets/js/nav.js?v=8"></script>
-  <script src="assets/js/main.js?v=8"></script>
+  <script src="assets/js/nav.js?v=9"></script>
+  <script src="assets/js/main.js?v=9"></script>
 </body>
 </html>
