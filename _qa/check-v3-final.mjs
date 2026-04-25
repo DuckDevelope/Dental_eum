@@ -440,10 +440,11 @@ async function test4_allPages(browser) {
 }
 
 /* ============================================================
-   TEST 5 — reduced-motion: textA only
+   TEST 5 — reduced-motion: wheel로 frame이 변하는지 검증
+   (v3-patch: reduced-motion에서도 ScrollTrigger 항상 작동)
 ============================================================ */
 async function test5_reducedMotion(browser) {
-  console.log('\n[Test 5] prefers-reduced-motion — textA only');
+  console.log('\n[Test 5] prefers-reduced-motion — wheel로 frame 진행');
   const ctx  = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     reducedMotion: 'reduce',
@@ -453,35 +454,40 @@ async function test5_reducedMotion(browser) {
   try {
     await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle', timeout: 20000 });
 
-    // Wait for loader to hide (reduced-motion path skips GSAP)
+    // reduced-motion에서도 preloadFrames + ScrollTrigger가 작동하므로 loader hide 대기
     await page.waitForFunction(
       () => document.getElementById('loader')?.classList.contains('hidden'),
       { timeout: 15000 }
     );
-    await page.waitForTimeout(800);
+    await waitForFrame(page);
+    await page.waitForTimeout(500);
 
-    const opA = parseFloat(await page.locator('#textA').evaluate(el => getComputedStyle(el).opacity));
-    const opB = parseFloat(await page.locator('#textB').evaluate(el => getComputedStyle(el).opacity));
-    const opC = parseFloat(await page.locator('#textC').evaluate(el => getComputedStyle(el).opacity));
+    const f0 = await page.evaluate(() => window.__currentFrame);
+    console.log(`    [reduced-motion] frame before wheel: ${f0}`);
 
-    console.log(`    reduced-motion: A=${opA.toFixed(2)} B=${opB.toFixed(2)} C=${opC.toFixed(2)}`);
-
-    if (opA >= 0.8) {
-      pass('Test5-A textA visible (≥0.8) in reduced-motion', `opA=${opA.toFixed(2)}`);
+    // textA는 progress 0에서 visible
+    const opA0 = parseFloat(await page.locator('#textA').evaluate(el => getComputedStyle(el).opacity));
+    console.log(`    [reduced-motion] textA at start: opA=${opA0.toFixed(2)}`);
+    if (opA0 >= 0.8) {
+      pass('Test5-A textA visible at start in reduced-motion', `opA=${opA0.toFixed(2)}`);
     } else {
-      fail('Test5-A textA not visible in reduced-motion', `opA=${opA.toFixed(2)}`);
+      fail('Test5-A textA not visible at start in reduced-motion', `opA=${opA0.toFixed(2)}`);
     }
 
-    if (opB <= 0.2) {
-      pass('Test5-B textB invisible (≤0.2) in reduced-motion', `opB=${opB.toFixed(2)}`);
-    } else {
-      fail('Test5-B textB visible in reduced-motion', `opB=${opB.toFixed(2)}`);
+    // Wheel down 6×100px → frame must increase
+    for (let i = 0; i < 6; i++) {
+      await page.mouse.wheel(0, 100);
+      await page.waitForTimeout(150);
     }
+    await page.waitForTimeout(1000);
 
-    if (opC <= 0.2) {
-      pass('Test5-C textC invisible (≤0.2) in reduced-motion', `opC=${opC.toFixed(2)}`);
+    const f1 = await page.evaluate(() => window.__currentFrame);
+    console.log(`    [reduced-motion] frame after 6×100 wheel: ${f1}`);
+
+    if (f1 > f0) {
+      pass('Test5-B reduced-motion wheel progress', `frame ${f0} → ${f1}`);
     } else {
-      fail('Test5-C textC visible in reduced-motion', `opC=${opC.toFixed(2)}`);
+      fail('Test5-B reduced-motion wheel no progress', `frame ${f0} → ${f1} (no change)`);
     }
 
   } catch (e) {

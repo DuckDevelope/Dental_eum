@@ -164,15 +164,28 @@ function initScrollTrigger() {
   setTextLayer(textB, 0, 24);
   setTextLayer(textC, 0, 20);
 
+  console.log('[EUM] ScrollTrigger init', {
+    scrollTop:    window.pageYOffset,
+    scrollHeight: document.body.scrollHeight,
+    vh:           window.innerHeight,
+    reducedMotion: prefersReducedMotion(),
+  });
+
+  let _firstUpdate = true;
+
   ScrollTrigger.create({
     trigger: hero,
     start:   'top top',
     end:     `+=${SCROLL_TOTAL}`,
     pin:     true,
-    scrub:   1.2,
+    scrub:   0.3,
     anticipatePin: 1,
 
     onUpdate(self) {
+      if (_firstUpdate) {
+        console.log('[EUM] first onUpdate fired, progress:', self.progress);
+        _firstUpdate = false;
+      }
       const p = self.progress;               // 0 → 1
 
       // ---- Canvas frame ----
@@ -262,17 +275,12 @@ function prefersReducedMotion() {
 
 /* ============================================================
    ENTRY POINT
+   reduced-motion: 그림(스크롤 시퀀스)은 항상 동작.
+   텍스트 transition만 instant로 처리 (setTextLayer에서 별도 처리 불필요 — inline style이 override).
 ============================================================ */
 (async function main() {
-  if (prefersReducedMotion()) {
-    const img = await loadImage(framePath(1));
-    images[0] = img;
-    loader.classList.add('hidden');
-    setTimeout(() => { loader.style.display = 'none'; }, 900);
-    staticFallback();
-    return;
-  }
-
+  // reduced-motion 여부와 무관하게 항상 전체 preload + ScrollTrigger 초기화.
+  // staticFallback()은 GSAP 미로드 케이스에만 사용.
   try {
     await preloadFrames();
   } catch (err) {
