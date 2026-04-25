@@ -16,8 +16,10 @@
 ============================================================ */
 const FRAME_COUNT         = 476;
 const FRAME_DIR           = 'frames_webp/';
-const SCROLL_PX_PER_FRAME = 4;
-const SCROLL_TOTAL_BASE   = FRAME_COUNT * SCROLL_PX_PER_FRAME;  // 1904
+// frame당 스크롤 픽셀 ↑ → 휠 한 노치(보통 100~120px)당 frame 점프량 ↓ → 부드럽게 보임.
+// 4 → 6 (전체 1904 → 2856). 데스크탑 휠 ~7~8노치, 모바일 swipe 1.5배.
+const SCROLL_PX_PER_FRAME = 6;
+const SCROLL_TOTAL_BASE   = FRAME_COUNT * SCROLL_PX_PER_FRAME;  // 2856
 
 const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches ||
                   (navigator.deviceMemory != null && navigator.deviceMemory < 4);
@@ -27,8 +29,9 @@ const SCROLL_TOTAL = IS_MOBILE ? SCROLL_TOTAL_BASE * 1.5 : SCROLL_TOTAL_BASE;
 const PRELOAD_TIMEOUT_MS  = 12_000;
 const PRELOAD_THRESHOLD   = 0.95;
 
-// Lerp 계수: 낮을수록 더 부드럽지만 반응 늦음. 0.18 ≒ 5프레임 내 99%.
-const LERP = 0.18;
+// Lerp 계수: 낮을수록 더 미끈하게 따라감. 0.10 ≒ 9프레임 내 ~99% 수렴.
+// 이전 0.18에서 0.10으로 낮춰 wheel 입력 step의 "딱딱" 점프를 더 흡수.
+const LERP = 0.10;
 
 const NATIVE_W = 1280;
 const NATIVE_H = 720;
@@ -43,7 +46,8 @@ function framePath(n) {
 const canvas      = document.getElementById('heroCanvas');
 const ctx         = canvas.getContext('2d', { alpha: false });
 const loader      = document.getElementById('loader');
-const loaderSub   = document.getElementById('loaderSub');
+// loaderSub: 카운터 표시 제거됨 (호환성 위해 호환 노드만 남김)
+const loaderSub   = document.getElementById('loaderSub');  // null 허용
 const progressBar = document.getElementById('heroProgressBar');
 const progressEl  = document.getElementById('heroProgress');
 const textA       = document.getElementById('textA');
@@ -137,9 +141,7 @@ async function preloadFrames() {
     loadAndDecode(framePath(i + 1)).then(img => {
       images[i] = img;
       loaded++;
-      if (loaded % 10 === 0 || loaded === total) {
-        loaderSub.textContent = `프레임을 불러오는 중입니다… (${loaded}/${total})`;
-      }
+      // 카운터 텍스트 제거 (박사님 피드백: 거슬림). 진행은 CSS 펄스 애니메이션으로 표현.
     })
   );
 
