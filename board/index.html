@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="이음 기공소 게시판" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>게시판 | 이음 기공소</title>
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="../assets/css/page.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .giscus-wrap {
+      margin-top: 2.5rem;
+    }
+
+    /* Giscus iframe overrides for dark theme */
+    .giscus, .giscus-frame {
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="page-body">
+
+  <main>
+    <!-- Hero -->
+    <section class="page-hero">
+      <div class="page-hero__inner">
+        <p class="page-hero__eyebrow">Community</p>
+        <h1 class="page-hero__title">게시판</h1>
+        <p class="page-hero__sub">이음 기공소 공지 및 소식</p>
+      </div>
+    </section>
+
+    <hr class="page-divider" />
+
+    <section class="page-section" aria-label="게시판">
+
+      <!--
+        Giscus 설정 방법 (박사님이 채울 placeholder):
+        1. https://giscus.app/ko 에서 repo 설정
+        2. 아래 data-repo, data-repo-id, data-category-id 값 교체
+        3. GitHub repo의 Discussions > General 카테고리 활성화 필요
+      -->
+      <div id="giscusBoard">
+        <!-- placeholder: Giscus 미설정 시 아래 안내 표시 -->
+      </div>
+
+      <div class="giscus-wrap" id="giscusMountBoard">
+        <!-- Giscus will mount here when configured -->
+      </div>
+
+    </section>
+  </main>
+
+  <script src="../assets/js/nav.js"></script>
+  <script>
+    // Giscus placeholders — 박사님이 채울 값들
+    const GISCUS_REPO          = 'YOUR_GITHUB_USERNAME/YOUR_REPO'; // ← placeholder #1
+    const GISCUS_REPO_ID       = 'YOUR_REPO_ID';                   // ← placeholder #2
+    const GISCUS_CATEGORY      = 'General';
+    const GISCUS_CATEGORY_ID   = 'YOUR_GENERAL_CATEGORY_ID';       // ← placeholder #3
+
+    const boardEl = document.getElementById('giscusBoard');
+
+    if (GISCUS_REPO === 'YOUR_GITHUB_USERNAME/YOUR_REPO') {
+      // 미설정: 안내 카드 표시
+      boardEl.innerHTML = `
+        <div class="placeholder-notice">
+          <div class="placeholder-notice__icon">⚙️</div>
+          <p class="placeholder-notice__title">관리자 설정이 필요합니다</p>
+          <p class="placeholder-notice__body">
+            게시판은 Giscus(GitHub Discussions)를 사용합니다.<br/>
+            <code>board/index.html</code> 하단 스크립트의<br/>
+            <code>GISCUS_REPO</code>, <code>GISCUS_REPO_ID</code>, <code>GISCUS_CATEGORY_ID</code> 값을<br/>
+            <a href="https://giscus.app/ko" target="_blank" rel="noopener"
+               style="color:var(--gold)">giscus.app</a>에서 생성 후 교체하세요.
+          </p>
+        </div>`;
+    } else {
+      // 설정됨: Giscus 스크립트 마운트
+      const mountEl = document.getElementById('giscusMountBoard');
+      const script = document.createElement('script');
+      script.src              = 'https://giscus.app/client.js';
+      script.setAttribute('data-repo',            GISCUS_REPO);
+      script.setAttribute('data-repo-id',         GISCUS_REPO_ID);
+      script.setAttribute('data-category',        GISCUS_CATEGORY);
+      script.setAttribute('data-category-id',     GISCUS_CATEGORY_ID);
+      script.setAttribute('data-mapping',         'pathname');
+      script.setAttribute('data-reactions-enabled', '1');
+      script.setAttribute('data-emit-metadata',   '0');
+      script.setAttribute('data-input-position',  'bottom');
+      script.setAttribute('data-theme',           'dark_dimmed');
+      script.setAttribute('data-lang',            'ko');
+      script.setAttribute('crossorigin',          'anonymous');
+      script.async = true;
+      mountEl.appendChild(script);
+    }
+  </script>
+</body>
+</html>

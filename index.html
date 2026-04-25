@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="이음 기공소 — 정밀과 정성이 만나는 치과 기공소입니다." />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>이음 기공소 | EUM DENTAL LABORATORY</title>
+
+  <!-- Pretendard Variable (Korean body) -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+  />
+
+  <!-- Cormorant Garamond (English display) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- GSAP 3.12 + ScrollTrigger -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12/dist/ScrollTrigger.min.js"></script>
+
+  <link rel="stylesheet" href="assets/css/page.css" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       HERO SECTION — scroll-sequenced canvas
+  ============================================================ -->
+  <section class="hero" id="hero">
+
+    <!-- Canvas: scroll-driven frame sequence -->
+    <canvas class="hero__canvas" id="heroCanvas" aria-hidden="true"></canvas>
+
+    <!-- Vignette overlay -->
+    <div class="hero__vignette" aria-hidden="true"></div>
+
+    <!-- Top mask band — "Precision Craftsmanship" (권고안 1) -->
+    <div class="hero__top-mask" aria-hidden="true">
+      <span class="hero__top-label">Precision Craftsmanship</span>
+    </div>
+
+    <!-- Fade-to-black overlay for sequence end (권고안 2) -->
+    <div class="hero__fade-black" id="heroFadeBlack" aria-hidden="true"></div>
+
+    <!-- Text layers — GSAP controls opacity/transform -->
+    <!-- Layer A: 0–30% — opening -->
+    <div class="hero__text hero__text--a" id="textA" aria-label="메인 슬로건">
+      <h1 class="hero__headline">이음,<br />디테일이 모이는 자리</h1>
+      <p class="hero__eyebrow">EUM DENTAL LABORATORY</p>
+    </div>
+
+    <!-- Layer B: 30–70% — main message -->
+    <div class="hero__text hero__text--b" id="textB" aria-label="메인 메시지">
+      <p class="hero__body">
+        정밀과 정성,<br />그 사이의 균형을 찾습니다.
+      </p>
+    </div>
+
+    <!-- Layer C: 70–100% — closing + CTA -->
+    <div class="hero__text hero__text--c" id="textC" aria-label="클로징">
+      <p class="hero__sub">장인의 손끝에서 완성되는 보철,<br />이음 기공소가 함께합니다.</p>
+      <span class="hero__cta-hint">
+        <span class="hero__cta-text">더 알아보기</span>
+        <span class="hero__cta-arrow" aria-hidden="true">↓</span>
+      </span>
+    </div>
+
+    <!-- Progress indicator (accessibility-friendly) -->
+    <div class="hero__progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="heroProgress">
+      <div class="hero__progress-bar" id="heroProgressBar"></div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================
+       PLACEHOLDER SECTION — next content (추후 확장)
+  ============================================================ -->
+  <section class="placeholder" id="nextSection" aria-label="다음 섹션">
+    <div class="placeholder__inner">
+      <p class="placeholder__eyebrow">EUM DENTAL LABORATORY</p>
+      <h2 class="placeholder__title">이음 기공소를<br />소개합니다.</h2>
+      <p class="placeholder__body">
+        경기도 용인에 위치한 이음 기공소는<br />
+        보철 기공 분야의 전문성과 세심한 서비스로<br />
+        신뢰받는 파트너가 되겠습니다.
+      </p>
+      <address class="placeholder__contact">
+        <a href="tel:010-4007-2804">010-4007-2804</a>
+        <span class="sep" aria-hidden="true">|</span>
+        <a href="mailto:eumdentallab@gmail.com">eumdentallab@gmail.com</a>
+      </address>
+    </div>
+  </section>
+
+  <!-- Loading screen -->
+  <div class="loader" id="loader" role="status" aria-label="페이지 로딩 중">
+    <div class="loader__ring" aria-hidden="true"></div>
+    <p class="loader__text">이음 기공소</p>
+    <p class="loader__sub" id="loaderSub">프레임을 불러오는 중입니다…</p>
+  </div>
+
+  <script src="assets/js/nav.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

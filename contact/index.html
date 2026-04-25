@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="이음 기공소 문의하기" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>문의하기 | 이음 기공소</title>
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="../assets/css/page.css" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+      margin-top: 2.5rem;
+    }
+
+    .tally-wrap {
+      background: var(--bg-card);
+      border: 1px solid rgba(184, 154, 94, 0.12);
+      border-radius: 6px;
+      overflow: hidden;
+      min-height: 400px;
+    }
+
+    iframe.tally-iframe {
+      width: 100%;
+      min-height: 500px;
+      border: none;
+      display: block;
+    }
+
+    .contact-side {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .hours-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(184, 154, 94, 0.12);
+      border-radius: 6px;
+      padding: 1.8rem;
+    }
+
+    .hours-card__title {
+      font-family: var(--font-kr);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .hours-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-kr);
+      font-size: 0.85rem;
+      font-weight: 300;
+      color: var(--text-muted);
+    }
+
+    .hours-table td {
+      padding: 0.4rem 0;
+      vertical-align: top;
+    }
+
+    .hours-table td:first-child {
+      font-weight: 500;
+      color: rgba(232, 229, 222, 0.7);
+      width: 5rem;
+    }
+
+    @media (max-width: 767px) {
+      .contact-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+  </style>
+</head>
+<body class="page-body">
+
+  <main>
+    <!-- Hero -->
+    <section class="page-hero">
+      <div class="page-hero__inner">
+        <p class="page-hero__eyebrow">Contact</p>
+        <h1 class="page-hero__title">문의하기</h1>
+        <p class="page-hero__sub">궁금하신 점을 남겨주시면 빠르게 답변드립니다.</p>
+      </div>
+    </section>
+
+    <hr class="page-divider" />
+
+    <section class="page-section" aria-label="문의 폼 및 연락처">
+      <p class="section-eyebrow">Inquiry</p>
+      <h2 class="section-title">문의 남기기</h2>
+
+      <div class="contact-layout">
+
+        <!-- Tally 폼 영역 -->
+        <div class="tally-wrap" id="tallyWrap">
+          <!-- placeholder: Tally formId 미설정 시 안내 표시 -->
+        </div>
+
+        <!-- 사이드: 직접 연락처 + 영업시간 -->
+        <div class="contact-side">
+          <div class="contact-card">
+            <p class="contact-card__title">직접 연락</p>
+            <ul class="contact-card__list">
+              <li class="contact-card__item">
+                <span class="contact-card__label">소장</span>
+                <span>김규홍</span>
+              </li>
+              <li class="contact-card__item">
+                <span class="contact-card__label">전화</span>
+                <a href="tel:010-4007-2804">010-4007-2804</a>
+              </li>
+              <li class="contact-card__item">
+                <span class="contact-card__label">이메일</span>
+                <a href="mailto:eumdentallab@gmail.com">eumdentallab@gmail.com</a>
+              </li>
+              <li class="contact-card__item">
+                <span class="contact-card__label">주소</span>
+                <span>경기도 용인시 기흥구<br />중부대로 184,<br />힉스유타워 A동 523-2호</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="hours-card">
+            <p class="hours-card__title">영업시간 / 응답시간</p>
+            <table class="hours-table">
+              <tbody>
+                <tr>
+                  <td>평일</td>
+                  <td>09:00 – 18:00<br /><span style="color:rgba(232,229,222,0.35);font-size:0.78rem">(확인 후 업데이트 예정)</span></td>
+                </tr>
+                <tr>
+                  <td>토요일</td>
+                  <td>협의<br /><span style="color:rgba(232,229,222,0.35);font-size:0.78rem">(확인 후 업데이트 예정)</span></td>
+                </tr>
+                <tr>
+                  <td>공휴일</td>
+                  <td>휴무</td>
+                </tr>
+                <tr>
+                  <td>응답시간</td>
+                  <td>1 영업일 이내</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/js/nav.js"></script>
+  <script>
+    // Tally placeholder — 박사님이 채울 값
+    const TALLY_FORM_ID = 'YOUR_TALLY_FORM_ID'; // ← placeholder #5
+
+    const tallyWrap = document.getElementById('tallyWrap');
+
+    if (TALLY_FORM_ID === 'YOUR_TALLY_FORM_ID') {
+      tallyWrap.innerHTML = `
+        <div class="placeholder-notice" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;">
+          <div class="placeholder-notice__icon">⚙️</div>
+          <p class="placeholder-notice__title">관리자 설정이 필요합니다</p>
+          <p class="placeholder-notice__body">
+            문의 폼은 Tally를 사용합니다.<br/>
+            <a href="https://tally.so" target="_blank" rel="noopener"
+               style="color:var(--gold)">tally.so</a>에서 폼을 생성 후<br/>
+            <code>contact/index.html</code> 하단 스크립트의<br/>
+            <code>TALLY_FORM_ID</code> 값을 교체하세요.
+          </p>
+        </div>`;
+    } else {
+      // Tally embed
+      tallyWrap.innerHTML = `
+        <iframe class="tally-iframe"
+          src="https://tally.so/embed/${TALLY_FORM_ID}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+          title="문의하기 폼"
+          loading="lazy">
+        </iframe>`;
+
+      // Tally resize script
+      const script = document.createElement('script');
+      script.src = 'https://tally.so/widgets/embed.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  </script>
+</body>
+</html>

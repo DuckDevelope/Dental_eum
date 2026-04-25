@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+_qa/node_modules/
+
+# QA artifacts
+_qa/screenshots*/
+_qa/report.json
+_qa/report.md
+_qa/test-results/
+
+# Legacy versions
+_legacy_v1/
+_legacy_v2/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log
