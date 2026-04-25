@@ -9,6 +9,7 @@
   <title>게시판 | 이음 기공소</title>
 
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://cusdis.com" />
   <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16,18 +17,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="../assets/css/page.css?v=5" />
+  <link rel="stylesheet" href="../assets/css/page.css?v=10" />
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .giscus-wrap {
-      margin-top: 2.5rem;
+    .comments-wrap {
+      margin-top: 2rem;
     }
-
-    /* Giscus iframe overrides for dark theme */
-    .giscus, .giscus-frame {
-      width: 100%;
+    .comments-hint {
+      font-family: var(--font-kr);
+      font-size: 0.85rem;
+      font-weight: 300;
+      line-height: 1.7;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.4rem;
+      background: rgba(184, 154, 94, 0.06);
+      border-left: 2px solid rgba(184, 154, 94, 0.4);
+      border-radius: 2px;
+    }
+    /* Cusdis iframe full width */
+    #cusdis_thread, #cusdis_thread iframe {
+      width: 100% !important;
     }
   </style>
 </head>
@@ -46,66 +59,77 @@
     <hr class="page-divider" />
 
     <section class="page-section" aria-label="게시판">
+      <p class="comments-hint">
+        가입 없이 <strong style="color:var(--gold)">이름</strong>과
+        <strong style="color:var(--gold)">이메일</strong>만 입력하시면 댓글을 남기실 수 있습니다.
+        이메일은 비공개이며 답글 알림 용도로만 사용됩니다.
+      </p>
 
-      <!--
-        Giscus 설정 방법 (박사님이 채울 placeholder):
-        1. https://giscus.app/ko 에서 repo 설정
-        2. 아래 data-repo, data-repo-id, data-category-id 값 교체
-        3. GitHub repo의 Discussions > General 카테고리 활성화 필요
-      -->
-      <div id="giscusBoard">
-        <!-- placeholder: Giscus 미설정 시 아래 안내 표시 -->
-      </div>
-
-      <div class="giscus-wrap" id="giscusMountBoard">
-        <!-- Giscus will mount here when configured -->
-      </div>
-
+      <div id="commentsBoard"></div>
+      <div class="comments-wrap" id="cusdisMount"></div>
     </section>
   </main>
 
-  <script src="../assets/js/nav.js?v=5"></script>
+  <script src="../assets/js/nav.js?v=10"></script>
   <script>
-    // Giscus placeholders — 박사님이 채울 값들
-    const GISCUS_REPO          = 'DuckDevelope/Dental_eum'; // ← placeholder #1
-    const GISCUS_REPO_ID       = 'R_kgDOSMj2hw';                   // ← placeholder #2
-    const GISCUS_CATEGORY      = 'General';
-    const GISCUS_CATEGORY_ID   = 'DIC_kwDOSMj2h84C7r8J';       // ← placeholder #3
+    /* ===========================================================
+       Cusdis 댓글 시스템 — 가입 불필요 (이름·이메일만 입력)
+       발급:
+         1. https://cusdis.com 접속 → 로그인(GitHub/Google)
+         2. New site → 사이트 이름 "이음 기공소" 입력
+         3. 발급된 App ID 를 아래 CUSDIS_APP_ID 에 붙여넣기
+       (이 키는 공개되어도 무방. 모더레이션은 cusdis.com 대시보드에서)
+    =========================================================== */
+    const CUSDIS_APP_ID = 'YOUR_CUSDIS_APP_ID';
+    const PAGE_ID       = 'board';
+    const PAGE_TITLE    = '이음 기공소 — 게시판';
 
-    const boardEl = document.getElementById('giscusBoard');
+    const target = document.getElementById('commentsBoard');
 
-    if (GISCUS_REPO === 'YOUR_GITHUB_USERNAME/YOUR_REPO') {
-      // 미설정: 안내 카드 표시
-      boardEl.innerHTML = `
+    if (CUSDIS_APP_ID === 'YOUR_CUSDIS_APP_ID' || !CUSDIS_APP_ID) {
+      target.innerHTML = `
         <div class="placeholder-notice">
           <div class="placeholder-notice__icon">⚙️</div>
-          <p class="placeholder-notice__title">관리자 설정이 필요합니다</p>
+          <p class="placeholder-notice__title">게시판 채널 준비 중입니다</p>
           <p class="placeholder-notice__body">
-            게시판은 Giscus(GitHub Discussions)를 사용합니다.<br/>
-            <code>board/index.html</code> 하단 스크립트의<br/>
-            <code>GISCUS_REPO</code>, <code>GISCUS_REPO_ID</code>, <code>GISCUS_CATEGORY_ID</code> 값을<br/>
-            <a href="https://giscus.app/ko" target="_blank" rel="noopener"
-               style="color:var(--gold)">giscus.app</a>에서 생성 후 교체하세요.
+            소식·공지 댓글은 <strong>Cusdis</strong>(가입 불필요)로 곧 열립니다.<br/>
+            그 동안 궁금하신 점은 아래 채널로 직접 연락 주시거나
+            <a href="../contact/" style="color:var(--gold);text-decoration:underline">문의하기 페이지</a>에서 남겨 주세요.
+          </p>
+          <div class="placeholder-quicklinks">
+            <a class="placeholder-quicklink" href="tel:010-4007-2804">
+              <span class="placeholder-quicklink__brand">Tel</span>010-4007-2804
+            </a>
+            <a class="placeholder-quicklink" href="mailto:eumdentallab@gmail.com">
+              <span class="placeholder-quicklink__brand">Email</span>eumdentallab@gmail.com
+            </a>
+            <a class="placeholder-quicklink" href="../contact/">
+              <span class="placeholder-quicklink__brand">Form</span>문의하기로 이동
+            </a>
+          </div>
+          <p class="placeholder-admin-note">
+            관리자: <code>board/index.html</code> 하단 <code>CUSDIS_APP_ID</code> 값을
+            <a href="https://cusdis.com" target="_blank" rel="noopener"
+               style="color:var(--gold)">cusdis.com</a>에서 발급받아 교체하면 댓글 영역이 활성화됩니다.
           </p>
         </div>`;
     } else {
-      // 설정됨: Giscus 스크립트 마운트
-      const mountEl = document.getElementById('giscusMountBoard');
-      const script = document.createElement('script');
-      script.src              = 'https://giscus.app/client.js';
-      script.setAttribute('data-repo',            GISCUS_REPO);
-      script.setAttribute('data-repo-id',         GISCUS_REPO_ID);
-      script.setAttribute('data-category',        GISCUS_CATEGORY);
-      script.setAttribute('data-category-id',     GISCUS_CATEGORY_ID);
-      script.setAttribute('data-mapping',         'pathname');
-      script.setAttribute('data-reactions-enabled', '1');
-      script.setAttribute('data-emit-metadata',   '0');
-      script.setAttribute('data-input-position',  'bottom');
-      script.setAttribute('data-theme',           'dark_dimmed');
-      script.setAttribute('data-lang',            'ko');
-      script.setAttribute('crossorigin',          'anonymous');
-      script.async = true;
-      mountEl.appendChild(script);
+      const mount = document.getElementById('cusdisMount');
+      const thread = document.createElement('div');
+      thread.id = 'cusdis_thread';
+      thread.setAttribute('data-host',        'https://cusdis.com');
+      thread.setAttribute('data-app-id',      CUSDIS_APP_ID);
+      thread.setAttribute('data-page-id',     PAGE_ID);
+      thread.setAttribute('data-page-url',    location.href);
+      thread.setAttribute('data-page-title',  PAGE_TITLE);
+      thread.setAttribute('data-theme',       'dark');
+      mount.appendChild(thread);
+
+      const s = document.createElement('script');
+      s.src   = 'https://cusdis.com/js/cusdis.es.js';
+      s.async = true;
+      s.defer = true;
+      mount.appendChild(s);
     }
   </script>
 </body>

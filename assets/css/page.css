@@ -405,6 +405,61 @@
   color: var(--gold-light);
 }
 
+/* Placeholder quicklinks — 직접 연락처 / 문의하기 빠른 이동 */
+.placeholder-quicklinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 1.4rem;
+}
+.placeholder-quicklink {
+  flex: 0 1 auto;
+  min-width: 180px;
+  padding: 0.7rem 1.1rem;
+  background: rgba(184, 154, 94, 0.08);
+  border: 1px solid rgba(184, 154, 94, 0.28);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-kr);
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.25s var(--ease-prestige), border-color 0.25s, color 0.25s;
+}
+.placeholder-quicklink:hover {
+  background: rgba(184, 154, 94, 0.18);
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+.placeholder-quicklink__brand {
+  display: inline-block;
+  font-family: var(--font-en);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-right: 0.5rem;
+}
+.placeholder-admin-note {
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(184, 154, 94, 0.12);
+  font-family: var(--font-kr);
+  font-size: 0.74rem;
+  font-weight: 300;
+  color: rgba(232, 229, 222, 0.45);
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 767px) {
+  .placeholder-quicklink { flex: 1 1 100%; }
+}
+
 /* Value card grid */
 .value-grid {
   display: grid;
