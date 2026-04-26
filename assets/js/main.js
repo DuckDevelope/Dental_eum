@@ -25,16 +25,14 @@
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ============================================================
-     HERO VIDEO — autoplay 보조
+     VIDEO autoplay 보조 — hero + story 카드 모두 동일 처리
   ============================================================ */
-  function initHeroVideo() {
-    const video = document.getElementById('heroVideo');
+  function ensurePlay(video) {
     if (!video) return;
 
-    // reduced-motion: 영상 정지, poster 노출 유지
     if (reducedMotion) {
       video.removeAttribute('autoplay');
-      video.pause();
+      try { video.pause(); } catch {}
       return;
     }
 
@@ -42,20 +40,27 @@
       const p = video.play();
       if (p && typeof p.catch === 'function') {
         p.catch(() => {
-          // 모바일 등 일부 브라우저는 첫 user gesture 후 재시도 필요
-          const onceUserAct = () => {
+          // 첫 user gesture 후 재시도 (모바일/일부 브라우저 차단 우회)
+          const once = () => {
             video.play().catch(() => {});
-            window.removeEventListener('touchstart', onceUserAct);
-            window.removeEventListener('click', onceUserAct);
+            window.removeEventListener('touchstart', once);
+            window.removeEventListener('click', once);
+            window.removeEventListener('keydown', once);
           };
-          window.addEventListener('touchstart', onceUserAct, { once: true, passive: true });
-          window.addEventListener('click', onceUserAct, { once: true });
+          window.addEventListener('touchstart', once, { once: true, passive: true });
+          window.addEventListener('click',      once, { once: true });
+          window.addEventListener('keydown',    once, { once: true });
         });
       }
     };
 
     if (video.readyState >= 2) tryPlay();
     else video.addEventListener('canplay', tryPlay, { once: true });
+  }
+
+  function initVideos() {
+    ensurePlay(document.getElementById('heroVideo'));
+    document.querySelectorAll('.story-card__media').forEach(ensurePlay);
   }
 
   /* ============================================================
@@ -104,7 +109,7 @@
      ENTRY
   ============================================================ */
   function init() {
-    initHeroVideo();
+    initVideos();
     initReveals();
     initScrollHint();
   }
