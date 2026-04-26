@@ -25,33 +25,27 @@
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ============================================================
-     VIDEO autoplay — v4.3: 박사님 통찰("v4.0 작업풍경은 자동재생 잘 됐다")
-       v4.1 ensurePlay() 동시 호출 + v4.2 IntersectionObserver 둘 다
-       회귀 원인. main.js는 영상에 명시 play() 호출하지 않고
-       <video autoplay muted loop playsinline> 속성만으로 브라우저 기본
-       동작에 맡긴다(이게 v4.0에서 동작했던 동작).
-       단 자동재생 정책상 차단된 환경(드물게)을 위해 첫 user gesture
-       발생 시 paused video를 silent하게 복구.
-       reduced-motion 시 모든 영상 정지.
+     VIDEO autoplay — v4.4: reduced-motion이어도 영상은 재생
+       박사님 콘솔에서 "[EUM] reduced-motion: videos paused" 확인됨.
+       박사님 OS(Windows 접근성 또는 절전 등)가 prefers-reduced-motion을
+       보고하고 있었음. 영상은 박사님 사이트의 핵심 콘텐츠라 reduced-motion
+       이어도 autoplay 유지. (text fade-in 등 entry animation은 CSS에서
+       reduced-motion 시 제거되므로 모션 자극은 충분히 줄어듦)
+       main.js는 명시 play() 호출하지 않고 autoplay 속성에만 의지.
+       paused 상태 영상이 있으면 user gesture로 silent 복구.
   ============================================================ */
   function initVideos() {
     const allVideos = document.querySelectorAll('video');
     if (!allVideos.length) return;
 
-    if (reducedMotion) {
-      allVideos.forEach(v => { try { v.removeAttribute('autoplay'); v.pause(); } catch {} });
-      console.log('[EUM] reduced-motion: videos paused');
-      return;
-    }
-
     // 첫 paint 후 잠깐 뒤에 paused 영상이 있으면 user gesture fallback armed.
     setTimeout(() => {
       const stuck = [...document.querySelectorAll('video')].filter(v => v.paused);
       if (stuck.length === 0) {
-        console.log('[EUM] all videos auto-playing');
+        console.log(`[EUM] all videos auto-playing (reducedMotion=${reducedMotion})`);
         return;
       }
-      console.log(`[EUM] ${stuck.length} video(s) paused — armed user-gesture fallback`);
+      console.log(`[EUM] ${stuck.length}/${allVideos.length} video(s) paused — armed user-gesture fallback (reducedMotion=${reducedMotion})`);
       const recover = () => {
         document.querySelectorAll('video').forEach(v => {
           if (v.paused) v.play().catch(() => {});

@@ -584,6 +584,9 @@ img, video {
    PREFERS-REDUCED-MOTION
 ============================================================ */
 @media (prefers-reduced-motion: reduce) {
+  /* text fade-in 등 entry animation만 제거. 영상 자체는 사이트의 핵심
+     콘텐츠라 자동재생 유지(박사님 결정 v4.4). 영상 자체는 muted·loop
+     이라 모션 자극이 작고 진짜로 자극 큰 부분은 entry transition 쪽임. */
   .hero__eyebrow,
   .hero__headline,
   .hero__sub,
@@ -598,6 +601,9 @@ img, video {
     transform: none;
     transition: none;
   }
-  .hero__video { display: none; }
-  .hero { background: #0A0A0A url(/dev/null) center/cover; }
+  .process-card,
+  .specialty-card,
+  .story-card__media {
+    transition: none;
+  }
 }
