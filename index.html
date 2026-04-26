@@ -25,25 +25,25 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="assets/css/page.css?v=15" />
-  <link rel="stylesheet" href="assets/css/main.css?v=15" />
+  <link rel="stylesheet" href="assets/css/page.css?v=16" />
+  <link rel="stylesheet" href="assets/css/main.css?v=16" />
 
   <!-- Hero 영상 poster를 우선 fetch — 영상 로딩 전 정적 화면 노출 -->
-  <link rel="preload" as="image" href="assets/video/cad-poster.jpg" fetchpriority="high" />
+  <link rel="preload" as="image" href="assets/video/feedback-poster.jpg" fetchpriority="high" />
 </head>
 <body>
 
   <!-- ============================================================
-       HERO — CAD 작업 영상 풀스크린
+       HERO — 메인 영상 풀스크린
   ============================================================ -->
   <section class="hero" id="hero" aria-label="메인 영상 히어로">
     <video
       class="hero__video"
       id="heroVideo"
       autoplay muted loop playsinline preload="auto"
-      poster="assets/video/cad-poster.jpg"
+      poster="assets/video/feedback-poster.jpg"
       aria-hidden="true">
-      <source src="assets/video/cad-1080.mp4" type="video/mp4" />
+      <source src="assets/video/feedback-1080.mp4" type="video/mp4" />
     </video>
 
     <div class="hero__vignette" aria-hidden="true"></div>
@@ -63,15 +63,15 @@
   </section>
 
   <!-- ============================================================
-       PROCESS — 라이트 섹션 "장인의 4단계"
+       PROCESS — 라이트 섹션, 제작 공정 4단계
   ============================================================ -->
-  <section class="section section--light" aria-label="제작 4단계">
+  <section class="section section--light" aria-label="제작 공정 4단계">
     <div class="section__inner">
       <p class="section__eyebrow" data-reveal>Process</p>
-      <h2 class="section__title"   data-reveal data-reveal-delay="1">장인의 4단계</h2>
+      <h2 class="section__title"   data-reveal data-reveal-delay="1">제작 공정 4단계</h2>
       <p class="section__lede"     data-reveal data-reveal-delay="2">
-        본뜨기에서 마무리까지, 거치는 손길은 단순하지 않습니다.<br />
-        이음 기공소가 보철의 디테일을 만드는 순서를 보여드립니다.
+        본뜨기에서 마무리까지 보철 한 점이 만들어지는 단계입니다.<br />
+        각 공정에서 무엇을 살피는지 정리했습니다.
       </p>
 
       <div class="process-grid">
@@ -107,7 +107,7 @@
           <h3 class="process-card__title">마무리</h3>
           <p class="process-card__body">
             색조와 질감을 자연치에 가깝게 조정합니다.<br />
-            최종 점검까지 한 명의 시야로.
+            납품 전 최종 점검을 거칩니다.
           </p>
         </article>
       </div>
@@ -241,7 +241,7 @@
     </div>
   </section>
 
-  <script src="assets/js/nav.js?v=15"></script>
-  <script src="assets/js/main.js?v=15"></script>
+  <script src="assets/js/nav.js?v=16"></script>
+  <script src="assets/js/main.js?v=16"></script>
 </body>
 </html>
