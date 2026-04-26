@@ -25,77 +25,43 @@
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ============================================================
-     VIDEO autoplay 보조 — v4.1 회귀 정정 (박사님 피드백):
-       v4.1에서 모든 video에 동시에 play()를 명시 호출 → 일부 브라우저가
-       viewport 밖 video를 throttle/차단 → 회귀.
-       v4.2 정책:
-         (1) autoplay 속성으로 1차 시도 (브라우저 기본 동작 신뢰)
-         (2) hero는 첫 paint에 보장되도록 한 번만 보조 호출
-         (3) story 카드는 IntersectionObserver로 viewport 안 들어왔을 때 보조
-         (4) reduced-motion 시 모두 정지
+     VIDEO autoplay — v4.3: 박사님 통찰("v4.0 작업풍경은 자동재생 잘 됐다")
+       v4.1 ensurePlay() 동시 호출 + v4.2 IntersectionObserver 둘 다
+       회귀 원인. main.js는 영상에 명시 play() 호출하지 않고
+       <video autoplay muted loop playsinline> 속성만으로 브라우저 기본
+       동작에 맡긴다(이게 v4.0에서 동작했던 동작).
+       단 자동재생 정책상 차단된 환경(드물게)을 위해 첫 user gesture
+       발생 시 paused video를 silent하게 복구.
+       reduced-motion 시 모든 영상 정지.
   ============================================================ */
-  function userGestureRetry(video) {
-    const once = () => {
-      video.play().catch(() => {});
-      window.removeEventListener('touchstart', once);
-      window.removeEventListener('click', once);
-      window.removeEventListener('keydown', once);
-    };
-    window.addEventListener('touchstart', once, { once: true, passive: true });
-    window.addEventListener('click',      once, { once: true });
-    window.addEventListener('keydown',    once, { once: true });
-  }
-
-  function tryPlayOnce(video, tag) {
-    if (!video || video.dataset.eumPlayTried === '1') return;
-    video.dataset.eumPlayTried = '1';
-    const p = video.play();
-    if (p && typeof p.catch === 'function') {
-      p.then(() => console.log(`[EUM] ${tag} playing`))
-       .catch(err => {
-         console.warn(`[EUM] ${tag} autoplay blocked:`, err.name);
-         userGestureRetry(video);
-       });
-    }
-  }
-
-  function initHeroVideo() {
-    const video = document.getElementById('heroVideo');
-    if (!video) return;
-    if (reducedMotion) {
-      video.removeAttribute('autoplay');
-      try { video.pause(); } catch {}
-      return;
-    }
-    if (video.readyState >= 2) tryPlayOnce(video, 'hero');
-    else video.addEventListener('canplay', () => tryPlayOnce(video, 'hero'), { once: true });
-  }
-
-  function initStoryVideos() {
-    const videos = document.querySelectorAll('.story-card__media');
-    if (!videos.length) return;
-    if (reducedMotion) {
-      videos.forEach(v => { v.removeAttribute('autoplay'); try { v.pause(); } catch {} });
-      return;
-    }
-    if (!('IntersectionObserver' in window)) {
-      videos.forEach(v => tryPlayOnce(v, 'story'));
-      return;
-    }
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) {
-          tryPlayOnce(e.target, `story[${[...videos].indexOf(e.target)}]`);
-          io.unobserve(e.target);
-        }
-      }
-    }, { threshold: 0.25 });
-    videos.forEach(v => io.observe(v));
-  }
-
   function initVideos() {
-    initHeroVideo();
-    initStoryVideos();
+    const allVideos = document.querySelectorAll('video');
+    if (!allVideos.length) return;
+
+    if (reducedMotion) {
+      allVideos.forEach(v => { try { v.removeAttribute('autoplay'); v.pause(); } catch {} });
+      console.log('[EUM] reduced-motion: videos paused');
+      return;
+    }
+
+    // 첫 paint 후 잠깐 뒤에 paused 영상이 있으면 user gesture fallback armed.
+    setTimeout(() => {
+      const stuck = [...document.querySelectorAll('video')].filter(v => v.paused);
+      if (stuck.length === 0) {
+        console.log('[EUM] all videos auto-playing');
+        return;
+      }
+      console.log(`[EUM] ${stuck.length} video(s) paused — armed user-gesture fallback`);
+      const recover = () => {
+        document.querySelectorAll('video').forEach(v => {
+          if (v.paused) v.play().catch(() => {});
+        });
+      };
+      window.addEventListener('click',      recover, { once: true });
+      window.addEventListener('touchstart', recover, { once: true, passive: true });
+      window.addEventListener('keydown',    recover, { once: true });
+      window.addEventListener('scroll',     recover, { once: true, passive: true });
+    }, 800);
   }
 
   /* ============================================================
