@@ -25,42 +25,77 @@
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ============================================================
-     VIDEO autoplay 보조 — hero + story 카드 모두 동일 처리
+     VIDEO autoplay 보조 — v4.1 회귀 정정 (박사님 피드백):
+       v4.1에서 모든 video에 동시에 play()를 명시 호출 → 일부 브라우저가
+       viewport 밖 video를 throttle/차단 → 회귀.
+       v4.2 정책:
+         (1) autoplay 속성으로 1차 시도 (브라우저 기본 동작 신뢰)
+         (2) hero는 첫 paint에 보장되도록 한 번만 보조 호출
+         (3) story 카드는 IntersectionObserver로 viewport 안 들어왔을 때 보조
+         (4) reduced-motion 시 모두 정지
   ============================================================ */
-  function ensurePlay(video) {
-    if (!video) return;
+  function userGestureRetry(video) {
+    const once = () => {
+      video.play().catch(() => {});
+      window.removeEventListener('touchstart', once);
+      window.removeEventListener('click', once);
+      window.removeEventListener('keydown', once);
+    };
+    window.addEventListener('touchstart', once, { once: true, passive: true });
+    window.addEventListener('click',      once, { once: true });
+    window.addEventListener('keydown',    once, { once: true });
+  }
 
+  function tryPlayOnce(video, tag) {
+    if (!video || video.dataset.eumPlayTried === '1') return;
+    video.dataset.eumPlayTried = '1';
+    const p = video.play();
+    if (p && typeof p.catch === 'function') {
+      p.then(() => console.log(`[EUM] ${tag} playing`))
+       .catch(err => {
+         console.warn(`[EUM] ${tag} autoplay blocked:`, err.name);
+         userGestureRetry(video);
+       });
+    }
+  }
+
+  function initHeroVideo() {
+    const video = document.getElementById('heroVideo');
+    if (!video) return;
     if (reducedMotion) {
       video.removeAttribute('autoplay');
       try { video.pause(); } catch {}
       return;
     }
+    if (video.readyState >= 2) tryPlayOnce(video, 'hero');
+    else video.addEventListener('canplay', () => tryPlayOnce(video, 'hero'), { once: true });
+  }
 
-    const tryPlay = () => {
-      const p = video.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          // 첫 user gesture 후 재시도 (모바일/일부 브라우저 차단 우회)
-          const once = () => {
-            video.play().catch(() => {});
-            window.removeEventListener('touchstart', once);
-            window.removeEventListener('click', once);
-            window.removeEventListener('keydown', once);
-          };
-          window.addEventListener('touchstart', once, { once: true, passive: true });
-          window.addEventListener('click',      once, { once: true });
-          window.addEventListener('keydown',    once, { once: true });
-        });
+  function initStoryVideos() {
+    const videos = document.querySelectorAll('.story-card__media');
+    if (!videos.length) return;
+    if (reducedMotion) {
+      videos.forEach(v => { v.removeAttribute('autoplay'); try { v.pause(); } catch {} });
+      return;
+    }
+    if (!('IntersectionObserver' in window)) {
+      videos.forEach(v => tryPlayOnce(v, 'story'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          tryPlayOnce(e.target, `story[${[...videos].indexOf(e.target)}]`);
+          io.unobserve(e.target);
+        }
       }
-    };
-
-    if (video.readyState >= 2) tryPlay();
-    else video.addEventListener('canplay', tryPlay, { once: true });
+    }, { threshold: 0.25 });
+    videos.forEach(v => io.observe(v));
   }
 
   function initVideos() {
-    ensurePlay(document.getElementById('heroVideo'));
-    document.querySelectorAll('.story-card__media').forEach(ensurePlay);
+    initHeroVideo();
+    initStoryVideos();
   }
 
   /* ============================================================
