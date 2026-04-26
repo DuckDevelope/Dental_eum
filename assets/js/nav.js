@@ -9,35 +9,33 @@
   /* ============================================================
      UTILITIES
   ============================================================ */
+  // sub-page 키워드 미포함 = 메인. GitHub Pages /Dental_eum/ 같은 sub-path 호스팅도 정상 인식.
   function isMainPage() {
-    const path = window.location.pathname;
-    return path === '/' || path.endsWith('/index.html') && !path.includes('/about/') &&
-      !path.includes('/location/') && !path.includes('/board/') &&
-      !path.includes('/qna/') && !path.includes('/contact/');
+    return !/\/(about|location|board|qna|contact)(\/|$)/.test(window.location.pathname);
   }
 
   function getCurrentPage() {
-    const path = window.location.pathname;
-    if (path === '/' || (path.endsWith('index.html') && path.split('/').length <= 2)) return 'main';
-    if (path.includes('/about/')) return 'about';
-    if (path.includes('/location/')) return 'location';
-    if (path.includes('/board/')) return 'board';
-    if (path.includes('/qna/')) return 'qna';
-    if (path.includes('/contact/')) return 'contact';
-    return 'main';
+    const m = /\/(about|location|board|qna|contact)(\/|$)/.exec(window.location.pathname);
+    return m ? m[1] : 'main';
   }
 
   /* ============================================================
      HEADER HTML
   ============================================================ */
   function buildHeader(currentPage) {
+    // GitHub Pages 등 sub-path 호스팅 호환을 위해 상대 경로 사용.
+    // 메인 페이지(root)에서는 "./", sub 페이지에서는 "../"가 부모 기준.
+    // currentPage 기준으로 통일 (URL 기반 isMainPage()는 sub-path에서 false 반환).
+    const isMain = currentPage === 'main';
+    const upMain = isMain ? './' : '../';
+    const upSub  = isMain ? '' : '../';
     const navItems = [
-      { key: 'main',     href: '/',           label: '메인' },
-      { key: 'about',    href: '/about/',      label: '기업소개' },
-      { key: 'location', href: '/location/',   label: '오시는 길' },
-      { key: 'board',    href: '/board/',      label: '게시판' },
-      { key: 'qna',      href: '/qna/',        label: 'Q&A' },
-      { key: 'contact',  href: '/contact/',    label: '문의하기' },
+      { key: 'main',     href: upMain,                label: '메인' },
+      { key: 'about',    href: `${upSub}about/`,       label: '기업소개' },
+      { key: 'location', href: `${upSub}location/`,    label: '오시는 길' },
+      { key: 'board',    href: `${upSub}board/`,       label: '게시판' },
+      { key: 'qna',      href: `${upSub}qna/`,         label: 'Q&A' },
+      { key: 'contact',  href: `${upSub}contact/`,     label: '문의하기' },
     ];
 
     const navLinks = navItems.map(item => {
@@ -45,13 +43,12 @@
       return `<li><a href="${item.href}"${active}>${item.label}</a></li>`;
     }).join('\n          ');
 
-    const isMain = currentPage === 'main';
     const headerClass = isMain ? 'global-nav global-nav--main' : 'global-nav global-nav--sub';
 
     return `
 <header class="${headerClass}" id="globalNav" role="banner">
   <div class="global-nav__inner">
-    <a href="/" class="global-nav__logo" aria-label="이음 기공소 홈으로">
+    <a href="${upMain}" class="global-nav__logo" aria-label="이음 기공소 홈으로">
       <span class="global-nav__logo-kr">이음 기공소</span>
       <span class="global-nav__logo-en">EUM DENTAL LABORATORY</span>
     </a>
