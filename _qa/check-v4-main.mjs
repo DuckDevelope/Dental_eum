@@ -110,7 +110,12 @@ const ng = (name, info) => { fail++; fails.push(`${name}: ${info}`); console.log
     else ng('hero video', 'element missing');
     if (meta.autoplay) ok('autoplay attr'); else ng('autoplay attr', 'missing');
     if (meta.muted)    ok('muted attr');    else ng('muted attr', 'missing');
-    if (meta.loop)     ok('loop attr');     else ng('loop attr', 'missing');
+    // v4.6+: hero는 loop 속성 대신 data-playlist + ended 이벤트로 순환 재생.
+    // playlist 데이터가 있으면 loop 속성은 없는 게 정상.
+    const hasPlaylist = await page.getAttribute('#heroVideo', 'data-playlist');
+    if (hasPlaylist) ok('hero playlist defined', 'cycles via ended event');
+    else if (meta.loop) ok('loop attr');
+    else ng('loop or playlist', 'neither present');
     if (meta.playsinline) ok('playsinline'); else ng('playsinline', 'missing');
     if (meta.poster)   ok('poster attr');   else ng('poster attr', 'missing');
     if (meta.src && meta.src.endsWith('.mp4')) ok('mp4 source', meta.src.split('/').slice(-2).join('/'));

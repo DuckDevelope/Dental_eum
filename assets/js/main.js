@@ -101,10 +101,58 @@
   }
 
   /* ============================================================
+     HERO PLAYLIST — v4.6: 박사님 요청 "feedback → cad → 석고모델 순환"
+       hero <video data-playlist="..."> 의 ended 이벤트로 다음 src 교체.
+       cross-fade(opacity)로 자연스러운 전환. 무한 순환.
+  ============================================================ */
+  function initHeroPlaylist() {
+    const v = document.getElementById('heroVideo');
+    if (!v) return;
+    let playlist = [];
+    try { playlist = JSON.parse(v.dataset.playlist || '[]'); } catch {}
+    if (!Array.isArray(playlist) || playlist.length < 2) return;
+
+    // loop 속성 제거 (HTML에서 미리 제거됐지만 안전장치)
+    v.removeAttribute('loop');
+
+    let idx = 0;
+    const FADE_MS = 600;
+
+    const swapTo = (i) => {
+      const clip = playlist[i];
+      if (!clip || !clip.src) return;
+      // fade out
+      v.style.transition = `opacity ${FADE_MS}ms ease-out`;
+      v.style.opacity = '0';
+      setTimeout(() => {
+        // src 교체. <source> 자식 대신 src 속성으로 직접 설정.
+        v.poster = clip.poster || '';
+        v.src = clip.src;
+        v.load();
+        const onCanPlay = () => {
+          v.play().catch(err => console.warn('[EUM] hero playlist play blocked:', err.name));
+          v.style.opacity = '1';
+          v.removeEventListener('canplay', onCanPlay);
+        };
+        v.addEventListener('canplay', onCanPlay, { once: true });
+      }, FADE_MS);
+    };
+
+    v.addEventListener('ended', () => {
+      idx = (idx + 1) % playlist.length;
+      console.log(`[EUM] hero playlist → ${idx} (${playlist[idx].src.split('/').pop()})`);
+      swapTo(idx);
+    });
+
+    console.log(`[EUM] hero playlist armed (${playlist.length} clips)`);
+  }
+
+  /* ============================================================
      ENTRY
   ============================================================ */
   function init() {
     initVideos();
+    initHeroPlaylist();
     initReveals();
     initScrollHint();
   }

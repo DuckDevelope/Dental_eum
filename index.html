@@ -25,8 +25,8 @@
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="assets/css/page.css?v=16" />
-  <link rel="stylesheet" href="assets/css/main.css?v=16" />
+  <link rel="stylesheet" href="assets/css/page.css?v=18" />
+  <link rel="stylesheet" href="assets/css/main.css?v=18" />
 
   <!-- Hero 영상 poster를 우선 fetch — 영상 로딩 전 정적 화면 노출 -->
   <link rel="preload" as="image" href="assets/video/feedback-poster.jpg" fetchpriority="high" />
@@ -37,12 +37,18 @@
        HERO — 메인 영상 풀스크린
   ============================================================ -->
   <section class="hero" id="hero" aria-label="메인 영상 히어로">
+    <!-- 영상 playlist: feedback → cad → closeup 순환 (loop 속성 제거 — main.js가 ended로 다음 영상 트리거) -->
     <video
       class="hero__video"
       id="heroVideo"
-      autoplay muted loop playsinline preload="auto"
+      autoplay muted playsinline preload="auto"
       poster="assets/video/feedback-poster.jpg"
-      aria-hidden="true">
+      aria-hidden="true"
+      data-playlist='[
+        {"src":"assets/video/feedback-1080.mp4","poster":"assets/video/feedback-poster.jpg"},
+        {"src":"assets/video/cad-1080.mp4","poster":"assets/video/cad-poster.jpg"},
+        {"src":"assets/video/closeup-1080.mp4","poster":"assets/video/closeup-poster.jpg"}
+      ]'>
       <source src="assets/video/feedback-1080.mp4" type="video/mp4" />
     </video>
 
@@ -241,7 +247,7 @@
     </div>
   </section>
 
-  <script src="assets/js/nav.js?v=16"></script>
-  <script src="assets/js/main.js?v=16"></script>
+  <script src="assets/js/nav.js?v=18"></script>
+  <script src="assets/js/main.js?v=18"></script>
 </body>
 </html>

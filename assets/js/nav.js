@@ -183,6 +183,32 @@
   }
 
   /* ============================================================
+     SUB-PAGE REVEAL — IntersectionObserver fade-up
+     메인 페이지는 main.js 의 initReveals()가 처리하므로 skip.
+     서브 페이지 (about/location/board/qna/contact)에서만 [data-reveal]을
+     관찰하여 .is-visible 토글.
+  ============================================================ */
+  function initSubReveal() {
+    if (isMainPage()) return;
+    const targets = document.querySelectorAll('[data-reveal]');
+    if (!targets.length) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !('IntersectionObserver' in window)) {
+      targets.forEach(el => el.classList.add('is-visible'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          io.unobserve(e.target);
+        }
+      }
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    targets.forEach(el => io.observe(el));
+  }
+
+  /* ============================================================
      ENTRY
   ============================================================ */
   function init() {
@@ -190,6 +216,7 @@
     initHamburger();
     initCopyBtn();
     initNavScroll();
+    initSubReveal();
   }
 
   if (document.readyState === 'loading') {
